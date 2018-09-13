@@ -41,4 +41,4 @@ Matteo's BM uses a header to indicate number/length of sequences, and number of 
 `function readfasta(file::String ; mapping=XXX)`
 I guess we would all be better off using the **same** mapping from amino acids to numbers.
 *By the way, we don't all deal with proteins. How should we handle this?*
-
+*We could add an alphabet string as optional input*
