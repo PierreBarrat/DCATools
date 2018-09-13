@@ -1,7 +1,7 @@
 ### Basics
 DCA parameters could be stored in a structure. 
 ```
-type graph
+struct graph
     J::Array{Float64,2}
     h::Array{Float64,1}
     L::Int64
