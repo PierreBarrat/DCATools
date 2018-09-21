@@ -16,7 +16,7 @@ Read dca parameters from `infile`. Format option can be either
 - `"mat"`: One line of `infile` represents the vector `J[i,a][:]`. This is useful for parameters stored in dlm format. Optional argument `q` is needed in this case. 
 Output is of type `DCAgraph`.
 """
-function readparam(infile::String ; format="mcmc", q=0)
+function readparam(infile::String ; format="mat", q=0)
 	if format == "mat"
 		if q==0
 			error("inputoutput.jl - readparam: With \"mat\" option, you need to specify `q`.\n")
@@ -28,7 +28,6 @@ function readparam(infile::String ; format="mcmc", q=0)
 	else
 		error("inputoutput.jl - readparam: Unrecognized format argument.\n")
 	end
-
 	return DCAgraph(J,h,L,q)
 end
 
@@ -96,4 +95,48 @@ function readparammcmc(infile::String)
             end
 	end 
 	return (J,h,L,q)
+end
+
+
+
+"""
+	function writeparam(outfile::String, g::DCAgraph; format="mat")
+
+Write graph `g` to file `outfile`: 
+- as a matrix if `format=="mat"`
+- using `J i j a b value` if `format=="mcmc"`
+"""
+function writeparam(outfile::String, g::DCAgraph; format="mat")
+	if format == "mat"
+		writedlm(outfile, [g.J ; g.h'], " ")
+	elseif format == "mcmc"
+		writeparammcmc(outfile,g)
+	else
+		error("inputoutput.jl - writeparam: Unrecognized format argument.\n")
+	end
+end
+
+
+"""
+	function writeparammcmc(outfile::String, g::DCAgraph)
+
+Write graph `g` to file `outfile` using format `J i j a b value`.
+"""
+function writeparammcmc(outfile::String, g::DCAgraph)
+	f = open(outfile, "w")
+	for i in 1:g.L
+		for j in (i+1):g.L
+			for a in 1:g.q
+				for b in 1:g.q
+					write(f, "J $(i-1) $(j-1) $(a-1) $(b-1) $(g.J[(j-1)*g.q+b, (i-1)*g.q+a])\n" )
+				end
+			end
+		end
+	end
+	for i in 1:g.L
+		for a in 1:g.q
+			write(f, "h $(i-1) $(a-1) $(g.h[(i-1)*g.q+a])\n" )
+		end
+	end
+	close(f)
 end
