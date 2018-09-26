@@ -1,3 +1,7 @@
+###
+using DelimitedFiles
+
+###
 """
 	struct DCAgraph
 """
@@ -8,6 +12,7 @@ struct DCAgraph
     q::Int64
 end
 
+###
 """
 	function readparam(infile::String ; format="mcmc", q=0)
 
@@ -72,9 +77,9 @@ function readparammcmc(infile::String)
 	## Strategy
 	# 1. Get lines starting with h
 	# 2. Retrieve value for `L` and `q` with those. 
-	hlines = lines[find(m->m!=nothing,map(x->match(r"^h",x),lines))] # step 1
-	L = findmax(map(l->parse(split(l," ")[2]),hlines))[1]+1 # step 2 for `L`
-	q = findmax(map(l->parse(split(l," ")[3]),hlines))[1]+1 # step 2 for `q`
+	hlines = lines[findall(m->m!=nothing,map(x->match(r"^h",x),lines))] # step 1
+	L = findmax(map(l->Meta.parse(split(l," ")[2]),hlines))[1]+1 # step 2 for `L`
+	q = findmax(map(l->Meta.parse(split(l," ")[3]),hlines))[1]+1 # step 2 for `q`
 
 	## Now we can attribute memory
 	J = zeros(Float64, L*q, L*q)
@@ -86,7 +91,7 @@ function readparammcmc(infile::String)
 	for l in lines
 		x = readdlm(IOBuffer(l[2:end]))
         v = x[end]
-        x = convert(Array{Int64,1},x[1:end-1]) + 1
+        x = convert(Array{Int64,1},x[1:end-1]) .+ 1
             if in('h',l)
                 h[(x[1]-1)*q + x[2]] = v
             elseif in('J',l)
@@ -152,7 +157,7 @@ If `format=1`, amino acids should be mapped from 1 to `q`. If `format=0`, they s
 `header` argument allows for discarding the first line of `infile`. 
 """
 function readmsanum(infile::String ; format=1, header=false)
-	Y = Array{Float64,2}(0,0)
+	Y = Array{Float64,2}(undef,0,0)
 	try 
 		if header
 			Y = readdlm(infile, Int64, skipstart=1)
