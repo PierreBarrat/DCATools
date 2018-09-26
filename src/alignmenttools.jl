@@ -74,6 +74,23 @@ function computefreqs(Y::Array{Int64,2}; q = findmax(Y)[1], computew=false, weig
     return (f1,f2,w)
 end
 
+"""
+    function computefreqs(msa::String; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", header=false, format=1)
+
+Wrapper. `msa` is a numerical alignment. Return frequencies `f1` and `f2` and weights.
+
+Keywords: 
+- `q`: default `findmax(Y)[1]`
+- `weights`: default `[]`. If it is a `String`, phylogenetic weights are read from the corresponding file. If it is an `Array{Float64,1}`, they are used directly.
+- `computew`: default `false`. If true, phylogenetic weights are computed, calling the appropriate `computeweights`. `weights` is then ignored. 
+- `saveweights` and `theta`: see `computeweights`. 
+- `header` and `format`: see `readmsanum`.
+"""
+function computefreqs(msa::String; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", header=false, format=1)
+    Y = readmsanum(msa, header=header, format=format)
+    return computefreqs(Y, q=q, computew=computew, weights=weights, theta=theta, saveweights=saveweights)
+end
+
 
 
 """
