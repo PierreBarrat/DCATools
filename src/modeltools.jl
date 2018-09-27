@@ -68,3 +68,34 @@ function switchgaugeLG(J::Array{Float64,2}, h::Array{Float64,1}, q::Int64 ; col=
 
     return (Jo,ho)
 end
+
+
+"""
+    computeenergies(g::DCAgraph, sample::Array{Int64,2})
+
+Compute energies of all configurations in `sample` with graph `g`.
+"""
+function computeenergies(g::DCAgraph, sample::Array{Int64,2})
+
+    (M,L) = size(sample)
+    energies = zeros(Float64, M)
+    for m = 1:M
+        for i = 1:L
+            for j = (i+1):L
+                energies[m] -= g.J[(i-1)*q+sample[m,i], (j-1)*q+sample[m,j]]
+            end
+        energies[m] -= g.h[(i-1)*q+sample[m,i]]
+        end
+    end
+    return energies
+end
+
+"""
+    computeenergies(g::DCAgraph, sample::Array{Int64,1})
+
+Compute energies of all configurations in `sample` with graph `g`.
+"""
+function computeenergies(g::DCAgraph, sample::Array{Int64,1})
+    return computeenergies(g,sample[:])
+end
+
