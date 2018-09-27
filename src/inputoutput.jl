@@ -1,16 +1,7 @@
 ###
-using DelimitedFiles
 
-###
-"""
-	struct DCAgraph
-"""
-struct DCAgraph
-    J::Array{Float64,2}
-    h::Array{Float64,1}
-    L::Int64
-    q::Int64
-end
+
+
 
 ###
 """

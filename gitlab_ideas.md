@@ -48,7 +48,7 @@ I guess we would all be better off using the **same** mapping from amino acids t
 
 
 ## Utilities
-#### Pairwise frequencies for alignment
+#### Pairwise frequencies for alignment - OK
 This should have several formats, for different inputs. 
 
 - Alignment is in a file, in numerical format.
@@ -69,11 +69,11 @@ And finally in this last scenario:
 
 Putting aside the case where the msa is in a fasta file: 
 
-Base routine, where computation is carried:
+**Base routine, where computation is carried:**
 
 `function computefreqs(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)`
 
-Then, different functions to call this one.
+**Then, different functions to call this one.**
 
 1. `function computefreqs(Y::Array{Int64,2} ; q = 21, reweighting=false, weights=[])`. 
 Handles different cases
