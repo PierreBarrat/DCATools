@@ -1,7 +1,9 @@
+export computefreqs, computeweights
+
 """
     function computefreqs(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
 
-Base routine for computing frequencies. `w` is an array containing the weights. 
+Base routine for computing frequencies in sample `Y`. `w` is an array containing the weights. 
 """
 function computefreqs(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
     (M,L) = size(Y)
@@ -75,9 +77,9 @@ function computefreqs(Y::Array{Int64,2}; q = findmax(Y)[1], computew=false, weig
 end
 
 """
-    function computefreqs(msa::String; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", header=false, format=1)
+    function computefreqs(msa::String; q = 0, computew=false, weights=[], theta=0.2, saveweights="", header=false, format=1)
 
-Wrapper. `msa` is a numerical alignment. Return frequencies `f1` and `f2` and weights.
+Wrapper. `msa` is a file containing the alignment in numerical format. Return frequencies `f1` and `f2` and weights.
 
 Keywords: 
 - `q`: default `findmax(Y)[1]`
@@ -86,8 +88,11 @@ Keywords:
 - `saveweights` and `theta`: see `computeweights`. 
 - `header` and `format`: see `readmsanum`.
 """
-function computefreqs(msa::String; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", header=false, format=1)
+function computefreqs(msa::String; q = 0, computew=false, weights=[], theta=0.2, saveweights="", header=false, format=1)
     Y = readmsanum(msa, header=header, format=format)
+    if q==0
+        q = findmax(Y)[1]
+    end
     return computefreqs(Y, q=q, computew=computew, weights=weights, theta=theta, saveweights=saveweights)
 end
 

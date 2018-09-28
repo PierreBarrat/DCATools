@@ -1,3 +1,5 @@
+export switchgauge!, computeenergies
+
 """
     function switchgauge!(g::DCAgraph ; gauge="0sum")
 
@@ -82,9 +84,9 @@ function computeenergies(g::DCAgraph, sample::Array{Int64,2})
     for m = 1:M
         for i = 1:L
             for j = (i+1):L
-                energies[m] -= g.J[(i-1)*q+sample[m,i], (j-1)*q+sample[m,j]]
+                energies[m] -= g.J[(i-1)*g.q+sample[m,i], (j-1)*g.q+sample[m,j]]
             end
-        energies[m] -= g.h[(i-1)*q+sample[m,i]]
+        energies[m] -= g.h[(i-1)*g.q+sample[m,i]]
         end
     end
     return energies
@@ -97,5 +99,43 @@ Compute energies of all configurations in `sample` with graph `g`.
 """
 function computeenergies(g::DCAgraph, sample::Array{Int64,1})
     return computeenergies(g,sample[:])
+end
+
+
+"""
+    function inferprofile(Y::Array{Int64,2}; q=findmax(Y)[1], pc = 1e-5, weights=[], save::String="")
+
+Infer profile model from alignment `Y`. 
+
+Keywords:
+- `q`: Default to maximum value in `Y`. 
+-`pc` and `save`: See `inferprofile`. 
+- `weights`: see `computefreqs`
+- 
+"""
+function inferprofile(msa::Array{Int64,2}, q::Int64; pc = 1e-5, weights="", outfile::String="")
+    f1 = computefreqs(msa, q=q, weights=weights)
+    return inferprofile(f1, q, pc=pc, save=save)
+end
+
+"""
+    function inferprofile(f1::Array{Float64,1}, q::Int64; pc = 1e-5, save::String="")
+
+Infer profile model from frequencies `f1`. 
+
+Keywords:
+-`pc`: Pseudocount ratio. Defaults to `1e-5`.
+- save: File to save inferred profile. Format of save is `mat`, readable by `readdlm` or `readparam`. 
+"""
+function inferprofile(f1::Array{Float64,1}, q::Int64; pc = 1e-5, save::String="")
+    L = Int64(size(f1,1)/q)
+    h = log.((1-pc)*f1 .+ pc/q)
+    for i in 1:L
+        h[(i-1)*q+(1:q)] .-= mean(h[(i-1)*q+(1:q)])
+    end
+    if save!=""
+        writedlm(outfile, [zeros(L*q,L*q) ; h'], " ")
+    end
+    return DCAgraph(zeros(L*q,L*q),h,L,q)
 end
 

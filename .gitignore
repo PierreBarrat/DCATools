@@ -1,3 +1,5 @@
 # Ignore dummy testing data
 testdata
 example/PF00096
+docs/build
+docs

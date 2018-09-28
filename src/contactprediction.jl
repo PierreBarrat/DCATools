@@ -1,3 +1,6 @@
+export PPV, Fapc
+
+
 """
     function PPV(scores::Array{Float64,2}, distances::Array{Float64,2} ; minrange=4, threshold=8)
 
@@ -14,7 +17,7 @@ function PPV(scores::Array{Float64,2}, distances::Array{Float64,2} ; minrange=4,
         error("contactprediction.jl - PPV: `scores` and `distances` should be in the format `i j value`.")
     end
 
-    scores = sortrows(scores, by=x->x[3],rev=true)
+    scores = sortslices(scores, dims=1, rev=true, by=x->x[3])
     d = Dict{Tuple{Float64,Float64},Float64}()
     for l in 1:size(distances,1)
         d[(distances[l,1], distances[l,2])] = distances[l,3]
@@ -42,17 +45,17 @@ end
 
 
 """
-    function Fapc(A::Array{Float64,2}, q::Int64 ; APC::Bool = false, gap::Bool = false, cols::Int64=3)
+    function Fapc(A::Array{Float64,2}, q::Int64 ; APC::Bool = true, gap::Bool = false, cols::Int64=3)
 
 Compute Frobenius norm of `q x q` blocks in matrix `A`. 
 
 Keywords:
-- `APC`: apply the famous APC correction. Default to `false`.
+- `APC`: apply the famous APC correction. Default to `true`.
 - `gap`: Remove the state `1` from the Frobenius norm. Default to `false`.
 - `col`: Format of output. With `3`, output is an array with rows being `i j value`. With `1`, output is a vector containing `value` only. Default to `3`. 
 
 """
-function Fapc(A::Array{Float64,2}, q::Int64 ; APC::Bool = false, gap::Bool = false, cols::Int64=3)
+function Fapc(A::Array{Float64,2}, q::Int64 ; APC::Bool = true, gap::Bool = false, cols::Int64=3)
 
     (L,L) = size(A)
     try
@@ -68,7 +71,7 @@ function Fapc(A::Array{Float64,2}, q::Int64 ; APC::Bool = false, gap::Bool = fal
     S = zeros(Float64, L,L)
     for i in 0:L-1
         for j in (i+1):L-1
-            S[i+1,j+1] = gap?vecnorm(A[i*q + (1:q), j*q + (1:q)]):vecnorm(A[i*q + (2:q), j*q + (2:q)])
+            S[i+1,j+1] = gap ? sqrt(sum(A[i*q .+ (1:q), j*q .+ (1:q)].^2)) : sqrt(sum(A[i*q .+ (2:q), j*q .+ (2:q)].^2))
             S[j+1,i+1] = S[i+1,j+1]
         end
     end
