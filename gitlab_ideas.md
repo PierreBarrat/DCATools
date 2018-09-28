@@ -93,3 +93,24 @@ Given an alignment `Array{Int64,2}` or a single sequence `Array{Int64,1}`, compu
 `function computeenergies(g::DCAgraph, Y::Array{Int64,2})`
 `function computeenergies(g::DCAgraph, Y::Array{Int64,1})`
 Return an `Array{Float64,1}` containing said energies.
+
+## Contact prediction
+
+#### Computing scores
+`function Fapc(A::Array{Float64,2}, q::Int64 ; APC::Bool = false, gap::Bool = false, cols::Int64=3)`
+
+Compute Frobenius norm of `q x q` blocks in matrix `A`. 
+
+Keywords:
+- `APC`: apply the famous APC correction. Default to `false`.
+- `gap`: Remove the state `1` from the Frobenius norm. Default to `false`.
+- `col`: Format of output. With `3`, output is an array with rows being `i j value`. With `1`, output is a vector containing `value` only. Default to `3`. 
+
+#### Computing PPV
+`function PPV(scores::Array{Float64,2}, distances::Array{Float64,2} ; minrange=4, threshold=8)`
+
+Compute Positive Predictive Value (PPV) for `scores` and `distances`. Both of these arrays should be in the format `i j val`. 
+
+Keywords:
+- `minrange`: Minimum value of `|i-j|` for a prediction to be made. Default to `4`.
+- `threshold`: Threshold defining contact. Default to `8`. 

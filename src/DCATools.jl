@@ -14,3 +14,4 @@ end
 include("inputoutput.jl")
 include("alignmenttools.jl")
 include("modeltools.jl")
+include("contactprediction.jl")
