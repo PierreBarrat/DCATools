@@ -1,7 +1,7 @@
-export switchgauge!, computeenergies
+export switchgauge!, computeenergies, inferprofile
 
 """
-    function switchgauge!(g::DCAgraph ; gauge="0sum")
+    switchgauge!(g::DCAgraph ; gauge="0sum")
 
 Switch parameters in `g` to gauge `gauge`. 
 Implemented gauges:
@@ -20,7 +20,7 @@ function switchgauge!(g::DCAgraph ; gauge="0sum", col=g.q)
 end
 
 """
-    function switchgauge0sum(J::Array{Float64,2}, h::Array{Float64,1}, L::Int64, q::Int64)
+    switchgauge0sum(J::Array{Float64,2}, h::Array{Float64,1}, L::Int64, q::Int64)
 
 Switch parameters to 0 sum gauge.
 """
@@ -48,7 +48,7 @@ function switchgauge0sum(J::Array{Float64,2}, h::Array{Float64,1}, L::Int64, q::
 end
 
 """
-    function switchgaugeLG(J::Array{Float64,2}, h::Array{Float64,1}, q::Int64 ; col=q)
+    switchgaugeLG(J::Array{Float64,2}, h::Array{Float64,1}, q::Int64 ; col=q)
 
 Switch parameters to lattice gas gauge. Keyword `col` indicates the state for which parameters should be 0. Defaults to `q`. 
 """
@@ -103,7 +103,7 @@ end
 
 
 """
-    function inferprofile(Y::Array{Int64,2}; q=findmax(Y)[1], pc = 1e-5, weights=[], save::String="")
+    inferprofile(Y::Array{Int64,2}; q=findmax(Y)[1], pc = 1e-5, weights=[], save::String="")
 
 Infer profile model from alignment `Y`. 
 
@@ -119,7 +119,7 @@ function inferprofile(msa::Array{Int64,2}, q::Int64; pc = 1e-5, weights="", outf
 end
 
 """
-    function inferprofile(f1::Array{Float64,1}, q::Int64; pc = 1e-5, save::String="")
+    inferprofile(f1::Array{Float64,1}, q::Int64; pc = 1e-5, save::String="")
 
 Infer profile model from frequencies `f1`. 
 

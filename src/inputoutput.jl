@@ -5,7 +5,7 @@ export readparam, writeparam, readmsanum
 
 ###
 """
-	function readparam(infile::String ; format="mcmc", q=0)
+	readparam(infile::String ; format="mcmc", q=0)
 
 Read dca parameters from `infile`. Format option can be either 
 - `"mcmc"`: `J i j a b val`
@@ -55,7 +55,7 @@ function readparammat(infile::String, q::Int64)
 end
 
 """
-	function readparammcmc(infile::String)
+	readparammcmc(infile::String)
 
 Read potts parameters in mcmc format: `J i j a b value` or `h i a value`. 
 Output `J`, `h` and `L`.
@@ -96,7 +96,7 @@ end
 
 
 """
-	function writeparam(outfile::String, g::DCAgraph; format="mat")
+	writeparam(outfile::String, g::DCAgraph; format="mat")
 
 Write graph `g` to file `outfile`: 
 - as a matrix if `format=="mat"`
@@ -114,7 +114,7 @@ end
 
 
 """
-	function writeparammcmc(outfile::String, g::DCAgraph)
+	writeparammcmc(outfile::String, g::DCAgraph)
 
 Write graph `g` to file `outfile` using format `J i j a b value`.
 """
@@ -140,7 +140,7 @@ end
 
 
 """
-	function readmsanum(infile::String ; format=1, header=false)
+	readmsanum(infile::String ; format=1, header=false)
 
 Read an MSA stored in `infile` in a numerical format. 
 

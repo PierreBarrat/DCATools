@@ -1,7 +1,7 @@
 export computefreqs, computeweights
 
 """
-    function computefreqs(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
+    computefreqs(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
 
 Base routine for computing frequencies in sample `Y`. `w` is an array containing the weights. 
 """
@@ -34,9 +34,9 @@ end
 
 
 """
-    function computefreqs(Y::Array{Int64,2}; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="")
+    computefreqs(Y::Array{Int64,2}; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="")
 
-Wrapper. `Y` is an array of `Int64`. Return frequencies `f1` and `f2` and weights.
+Compute pairwise frequencies for an array input. `Y` is an array of `Int64`. Return frequencies `f1` and `f2` and weights.
 
 Keywords: 
 - `q`: default `findmax(Y)[1]`
@@ -77,9 +77,9 @@ function computefreqs(Y::Array{Int64,2}; q = findmax(Y)[1], computew=false, weig
 end
 
 """
-    function computefreqs(msa::String; q = 0, computew=false, weights=[], theta=0.2, saveweights="", header=false, format=1)
+    computefreqs(msa::String; q = 0, computew=false, weights=[], theta=0.2, saveweights="", header=false, format=1)
 
-Wrapper. `msa` is a file containing the alignment in numerical format. Return frequencies `f1` and `f2` and weights.
+Compute pairwise frequencies for a file input. `msa` is a file containing the alignment in numerical format. Return frequencies `f1` and `f2` and weights.
 
 Keywords: 
 - `q`: default `findmax(Y)[1]`
@@ -99,9 +99,9 @@ end
 
 
 """
-    function computeweights(msa::String; theta::Float64 = 0.2, saveweights::String = "", format=1, header=false)
+    computeweights(msa::String; theta::Float64 = 0.2, saveweights::String = "", format=1, header=false)
 
-Wrapper. Compute weights of each sequence in file `msa` using reweighting threshold `theta` (default 0.2). 
+Compute weights for file input. Compute weights of each sequence in file `msa` using reweighting threshold `theta` (default 0.2). 
 
 Keywords: 
 - `theta`: threshold of similarity under which sequences are weighted down. Default `0.2`. 
@@ -115,9 +115,9 @@ function computeweights(msa::String; theta::Float64 = 0.2, saveweights::String =
 end
 
 """
-    function computeweights(Y::Array{Int64,2} ; theta = 0.2, saveweights="")  
+    computeweights(Y::Array{Int64,2} ; theta = 0.2, saveweights="")  
 
-Wrapper. Compute weights of each sequence in file `msa` using reweighting threshold `theta` (default 0.2). 
+Compute weights for array input. Compute weights of each sequence in file `msa` using reweighting threshold `theta` (default 0.2). 
 
 Keywords: 
 - `theta`: threshold of similarity under which sequences are weighted down. Default `0.2`. 
@@ -132,7 +132,7 @@ function computeweights(Y::Array{Int64,2} ; theta = 0.2, saveweights="")
 end
 
 """
-    function computeweights(Y::Array{Int64,2},theta::Float64)
+    computeweights(Y::Array{Int64,2},theta::Float64)
 
 Basic routine. Compute weights of sequences in alignment `Y`, using threshold `theta`. 
 """

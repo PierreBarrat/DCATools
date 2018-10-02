@@ -2,7 +2,7 @@ export PPV, Fapc
 
 
 """
-    function PPV(scores::Array{Float64,2}, distances::Array{Float64,2} ; minrange=4, threshold=8)
+    PPV(scores::Array{Float64,2}, distances::Array{Float64,2} ; minrange=4, threshold=8)
 
 Compute Positive Predictive Value (PPV) for `scores` and `distances`. Both of these arrays should be in the format `i j val`. 
 
@@ -45,7 +45,7 @@ end
 
 
 """
-    function Fapc(A::Array{Float64,2}, q::Int64 ; APC::Bool = true, gap::Bool = false, cols::Int64=3)
+    Fapc(A::Array{Float64,2}, q::Int64 ; APC::Bool = true, gap::Bool = false, cols::Int64=3)
 
 Compute Frobenius norm of `q x q` blocks in matrix `A`. 
 
