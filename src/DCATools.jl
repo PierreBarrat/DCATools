@@ -2,6 +2,7 @@ module DCATools
 
 using DelimitedFiles
 using Statistics
+using LinearAlgebra
 
 """
 	struct DCAgraph
@@ -37,6 +38,7 @@ include("inputoutput.jl")
 include("alignmenttools.jl")
 include("modeltools.jl")
 include("contactprediction.jl")
+include("misc.jl")
 
 export DCAgraph
 

@@ -6,6 +6,11 @@ export computefreqs, computeweights
 Base routine for computing frequencies in sample `Y`. `w` is an array containing the weights. 
 """
 function computefreqs(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
+    if typeof(w)==Array{Float64,2}
+        @warn("alignmenttools.jl - computefreqs: `w` is of dimension 2. Applying `vec`.")
+        w = vec(w)
+    end
+
     (M,L) = size(Y)
     f2 = zeros(Float64, L*q, L*q)
     f1 = zeros(Float64,L*q) 

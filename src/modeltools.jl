@@ -1,4 +1,4 @@
-export switchgauge!, computeenergies, inferprofile
+export switchgauge!, computeenergies, inferprofile, pseudolikelihood
 
 """
     switchgauge!(g::DCAgraph ; gauge="0sum")
@@ -137,5 +137,42 @@ function inferprofile(f1::Array{Float64,1}, q::Int64; pc = 1e-5, save::String=""
         writedlm(outfile, [zeros(L*q,L*q) ; h'], " ")
     end
     return DCAgraph(zeros(L*q,L*q),h,L,q)
+end
+
+
+"""
+    pseudolikelihood(Y::Array{Int64,2}, g::DCAgraph; weights=ones(size(Y,1)))
+
+Compute the pseudo-likelihood of configurations (*ie* sequences) in `Y` according to parameters in `g`. 
+"""
+function pseudolikelihood(Y::Array{Int64,2}, g::DCAgraph ;  weights::Array{Float64,1}=ones(Float64,size(Y,1)))
+    (M,L) = size(Y)
+    Yi = Y'
+
+    PL = 0.
+    Z = 0.
+    p = 0.
+    E = 0.
+    for m in 1:M
+        for i in 1:L
+            # Local partition function
+            Z = 0.
+            for a in 1:g.q
+                E = 0.
+                for j in 1:L
+                    E += g.J[(j-1)*g.q+Yi[j,m], (i-1)*g.q+a] + g.h[(j-1)*g.q+Yi[j,m]]
+                end
+                Z += exp(E)
+            end
+            # Local likelihood of data
+            E = 0.
+            for j in 1:L
+                E += g.J[(j-1)*g.q+Yi[j,m], (i-1)*g.q+Yi[i,m]] + g.h[(j-1)*g.q+Yi[j,m]]
+            end
+            PL += log(exp(E)/Z) * weights[m]
+        end
+    end
+    PL = PL/sum(weights)
+    return PL
 end
 

@@ -5,7 +5,7 @@ export readparam, writeparam, readmsanum
 
 ###
 """
-	readparam(infile::String ; format="mcmc", q=0)
+	readparam(infile::String ; format="mat", q=0)
 
 Read dca parameters from `infile`. Format option can be either 
 - `"mcmc"`: `J i j a b val`
