@@ -39,7 +39,7 @@ struct DCAgraph
 ```
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/DCATools.jl#L7-L9' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/DCATools.jl#L7-L9' class='documenter-source'>source</a><br>
 
 <a id='Base.:*' href='#Base.:*'>#</a>
 **`Base.:*`** &mdash; *Function*.
@@ -53,7 +53,7 @@ function *(B, g::DCAgraph)
 Multiply fields and couplings in `g` by scalar `B`. Useful to change temperature. 
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/DCATools.jl#L18-L22' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/DCATools.jl#L18-L22' class='documenter-source'>source</a><br>
 
 
 ```
@@ -63,7 +63,7 @@ function *(B, g::DCAgraph)
 Multiply fields and couplings in `g` by scalar `B`. Useful to change temperature. 
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/DCATools.jl#L27-L31' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/DCATools.jl#L27-L31' class='documenter-source'>source</a><br>
 
 
 <a id='Alignment-tools-–-alignmenttools.jl-1'></a>
@@ -87,7 +87,7 @@ computefreqs(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
 Base routine for computing frequencies in sample `Y`. `w` is an array containing the weights. 
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/alignmenttools.jl#L3-L7' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/alignmenttools.jl#L3-L7' class='documenter-source'>source</a><br>
 
 
 ```
@@ -104,7 +104,7 @@ Keywords:
   * `saveweights` and `theta`: see `computeweights`.
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/alignmenttools.jl#L41-L51' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/alignmenttools.jl#L41-L51' class='documenter-source'>source</a><br>
 
 
 ```
@@ -122,7 +122,7 @@ Keywords:
   * `header` and `format`: see `readmsanum`.
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/alignmenttools.jl#L84-L95' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/alignmenttools.jl#L84-L95' class='documenter-source'>source</a><br>
 
 
 <a id='Compute-weights-of-sequences.-1'></a>
@@ -147,7 +147,7 @@ Keywords:
   * `format` and `header`: used to read `msa`. See `readmsanum`.
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/alignmenttools.jl#L106-L115' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/alignmenttools.jl#L106-L115' class='documenter-source'>source</a><br>
 
 
 ```
@@ -162,7 +162,7 @@ Keywords:
   * `saveweights`: weights are saved there if non empty. Default `""`
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/alignmenttools.jl#L122-L130' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/alignmenttools.jl#L122-L130' class='documenter-source'>source</a><br>
 
 
 ```
@@ -172,7 +172,7 @@ computeweights(Y::Array{Int64,2},theta::Float64)
 Basic routine. Compute weights of sequences in alignment `Y`, using threshold `theta`. 
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/alignmenttools.jl#L139-L143' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/alignmenttools.jl#L139-L143' class='documenter-source'>source</a><br>
 
 
 <a id='Input-/-output-inputoutput.jl-1'></a>
@@ -201,7 +201,7 @@ Read dca parameters from `infile`. Format option can be either
 Output is of type `DCAgraph`.
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/inputoutput.jl#L7-L14' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/inputoutput.jl#L7-L14' class='documenter-source'>source</a><br>
 
 
 <a id='Write-DCA-parameters-to-file.-1'></a>
@@ -223,7 +223,7 @@ Write graph `g` to file `outfile`:
   * using `J i j a b value` if `format=="mcmc"`
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/inputoutput.jl#L98-L104' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/inputoutput.jl#L98-L104' class='documenter-source'>source</a><br>
 
 
 <a id='Read-a-numerical-alignment-from-a-file.-1'></a>
@@ -244,7 +244,7 @@ Read an MSA stored in `infile` in a numerical format.
 If `format=1`, amino acids should be mapped from 1 to `q`. If `format=0`, they should be mapped from 0 to `q-1`. `header` argument allows for discarding the first line of `infile`. 
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/inputoutput.jl#L142-L149' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/inputoutput.jl#L142-L149' class='documenter-source'>source</a><br>
 
 
 <a id='Model-tools-–-modeltools.jl-1'></a>
@@ -271,7 +271,7 @@ Switch parameters in `g` to gauge `gauge`.  Implemented gauges:
 2. Lattice gas: "LG", "lg", "latticegas".
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/modeltools.jl#L3-L10' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/modeltools.jl#L3-L10' class='documenter-source'>source</a><br>
 
 
 <a id='Compute-energies-of-sequences-for-given-DCA-parameters.-1'></a>
@@ -290,7 +290,7 @@ computeenergies(g::DCAgraph, sample::Array{Int64,2})
 Compute energies of all configurations in `sample` with graph `g`.
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/modeltools.jl#L75-L79' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/modeltools.jl#L75-L79' class='documenter-source'>source</a><br>
 
 
 ```
@@ -300,7 +300,7 @@ computeenergies(g::DCAgraph, sample::Array{Int64,1})
 Compute energies of all configurations in `sample` with graph `g`.
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/modeltools.jl#L95-L99' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/modeltools.jl#L95-L99' class='documenter-source'>source</a><br>
 
 
 <a id='Infer-a-profile-model-from-frequencies-or-an-alignment.-1'></a>
@@ -328,7 +328,7 @@ Keywords:
   * 
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/modeltools.jl#L105-L115' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/modeltools.jl#L105-L115' class='documenter-source'>source</a><br>
 
 
 ```
@@ -342,7 +342,7 @@ Keywords: -`pc`: Pseudocount ratio. Defaults to `1e-5`.
   * save: File to save inferred profile. Format of save is `mat`, readable by `readdlm` or `readparam`.
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/modeltools.jl#L121-L129' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/modeltools.jl#L121-L129' class='documenter-source'>source</a><br>
 
 
 <a id='Compute-pseudo-likelihood-of-data-1'></a>
@@ -361,7 +361,7 @@ pseudolikelihood(Y::Array{Int64,2}, g::DCAgraph; weights=ones(size(Y,1)))
 Compute the pseudo-likelihood of configurations (*ie* sequences) in `Y` according to parameters in `g`. 
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/modeltools.jl#L143-L147' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/modeltools.jl#L143-L147' class='documenter-source'>source</a><br>
 
 
 <a id='Contact-prediction-–-contactprediction.jl-1'></a>
@@ -391,7 +391,7 @@ Keywords:
   * `col`: Format of output. With `3`, output is an array with rows being `i j value`. With `1`, output is a vector containing `value` only. Default to `3`.
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/contactprediction.jl#L47-L57' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/contactprediction.jl#L47-L57' class='documenter-source'>source</a><br>
 
 
 <a id='Compute-PPV-for-given-scores-and-distances.-1'></a>
@@ -415,7 +415,7 @@ Keywords:
   * `threshold`: Threshold defining contact. Default to `8`.
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/contactprediction.jl#L4-L12' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/contactprediction.jl#L4-L12' class='documenter-source'>source</a><br>
 
 
 <a id='Miscellaneous-–-misc.jl-1'></a>
@@ -445,7 +445,7 @@ Fitting quality of pairwise frequencies. Compare frequencies `(f1_1,f2_1)` (*e.g
 5. Same as 3. for magnetizations.
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/misc.jl#L3-L12' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/misc.jl#L3-L12' class='documenter-source'>source</a><br>
 
 
 <a id='Three-points-correlation-1'></a>
@@ -464,7 +464,7 @@ mutable struct corr3p
 Three body correlation at positions `i, j, k` for states `a, b, c`, with value `cor`. 
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/misc.jl#L50-L54' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/misc.jl#L50-L54' class='documenter-source'>source</a><br>
 
 <a id='DCATools.threepointscor' href='#DCATools.threepointscor'>#</a>
 **`DCATools.threepointscor`** &mdash; *Function*.
@@ -478,7 +478,7 @@ threepointscor(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64, threshold::Floa
 Base routine. Compute three body correlations between columns of alignment `Y`, with sequences being weighted by `w`. Keep only correlation values that are above `threshold`. Return corresponding list of triplets `(i,j,k),(a,b,c)`. 
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/misc.jl#L65-L69' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/misc.jl#L65-L69' class='documenter-source'>source</a><br>
 
 
 ```
@@ -490,7 +490,7 @@ Base routine. Compute three body correlations between columns of alignment `Y`, 
 *Note*: this function could easily be optimized.
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/misc.jl#L116-L122' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/misc.jl#L116-L122' class='documenter-source'>source</a><br>
 
 
 ```
@@ -509,5 +509,5 @@ Keywords:
   * `saveweights` and `theta`: see `computeweights`.
 
 
-<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/7b76e84e35cb66ec989505c4dced460cd09285ea/src/misc.jl#L155-L167' class='documenter-source'>source</a><br>
+<a target='_blank' href='https://github.com/PierreBarrat/DCATools/blob/c2fc85e665fcdaf87f58c2cc54bf4a0b0f5760fc/src/misc.jl#L155-L167' class='documenter-source'>source</a><br>
 
