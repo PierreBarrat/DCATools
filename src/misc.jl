@@ -1,4 +1,4 @@
-export fitquality, threepointscor, corr3p
+export fitquality, threepointscor, corr3p, projseq
 
 """
     fitquality(f2_1::Array{Float64,2}, f1_1::Array{Float64,1}, f2_2::Array{Float64,2}, f1_2::Array{Float64,1}, q::Int64; withdiag=false)
@@ -131,7 +131,7 @@ function threepointscor(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64, triple
     tick = Int64(round(K/100))
     for tr in 1:K
         if mod(tr,tick)==0
-            print("$(Int64(round(tr/K*100)))% complete \r")
+            print("$(Int64(round(tr/K*100)))% complete    \r")
         end
         i = triplets[tr,1]
         j = triplets[tr,2]
@@ -201,4 +201,32 @@ function threepointscor(Y::Array{Int64,2}; q = findmax(Y)[1], threshold=0, tripl
         c3p, triplets = threepointscor(Y,w,q,Float64(threshold))
     end
     return c3p, triplets
+end
+
+
+
+
+
+"""
+    projseq(seq, pc, q)
+
+Project sequences in `seq` on column vectors in `pc`. 
+"""
+function projseq(seq::Array{Int64,2}, pc::Array{Float64,2}, q)
+    (K,P) = size(pc)
+    (M,L) = size(seq)
+    if K!=L*q
+        error("misc.jl - projseq: incorrect size for `pc`.\n")
+    end
+    proj = zeros(Float64, M,P)
+    seq01 = zeros(Bool,L*q)
+    for m in 1:M
+        seq01 .= false
+        for i in 1:L
+            seq01[(i-1)*q+seq[m,i]] = true
+        end
+        proj[m,:] = seq01' * pc
+    end
+
+    return proj
 end
