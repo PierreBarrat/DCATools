@@ -15,6 +15,7 @@ mutable struct DCAgraph
 end
 
 import Base: *
+
 """
 	function *(B, g::DCAgraph)
 
@@ -34,13 +35,13 @@ function *(g::DCAgraph, B)
 end
 
 
-include("inputoutput.jl")
-include("alignmenttools.jl")
-include("modeltools.jl")
-include("contactprediction.jl")
-include("misc.jl")
+include("DCATools/inputoutput.jl")
+include("DCATools/alignmenttools.jl")
+include("DCATools/modeltools.jl")
+include("DCATools/contactprediction.jl")
+include("DCATools/misc.jl")
 
-export DCAgraph
+export DCAgraph, *
 
 
 end

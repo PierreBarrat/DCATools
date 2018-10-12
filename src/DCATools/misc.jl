@@ -1,4 +1,4 @@
-export fitquality, threepointscor, corr3p, projseq
+export fitquality, threepointscor, corr3p, projseq, linreg
 
 """
     fitquality(f2_1::Array{Float64,2}, f1_1::Array{Float64,1}, f2_2::Array{Float64,2}, f1_2::Array{Float64,1}, q::Int64; withdiag=false)
