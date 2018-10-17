@@ -131,7 +131,7 @@ function inferprofile(f1::Array{Float64,1}, q::Int64; pc = 1e-5, save::String=""
     L = Int64(size(f1,1)/q)
     h = log.((1-pc)*f1 .+ pc/q)
     for i in 1:L
-        h[(i-1)*q+(1:q)] .-= mean(h[(i-1)*q+(1:q)])
+        h[(i-1)*q .+ (1:q)] .-= mean(h[(i-1)*q .+ (1:q)])
     end
     if save!=""
         writedlm(outfile, [zeros(L*q,L*q) ; h'], " ")

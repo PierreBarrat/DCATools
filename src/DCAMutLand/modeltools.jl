@@ -19,7 +19,7 @@ export computeenergies!, mapenergies!, mapenergies!, mapenergies
 Compute energies of all `Mutant` in `md.mutant` using `g`. 
 """
 function computeenergies!(md::MutData, g::DCAgraph)
-	md.E_wt = ComputeEnergies(g.J, g.h, md.wt, g.q)
+	md.E_wt = computeenergies(g.J, g.h, md.wt, g.q)
 	for mut in md.mutant
 		computeenergies!(mut, g, md.wt, md.E_wt)
 	end
@@ -36,10 +36,10 @@ function computeenergies!(mut::Mutant, g::DCAgraph, wt::Array{Int64,1}, E_wt::Fl
 	for smut in mut.smut
 		mseq[smut.i] = smut.a
 		mseqt[smut.i] = smut.a
-		smut.E = ComputeEnergies(g.J, g.h, mseq, g.q) - E_wt
+		smut.E = computeenergies(g.J, g.h, mseq, g.q) - E_wt
 		mseq[smut.i] = wt[smut.i]
 	end
-	mut.E = ComputeEnergies(g.J, g.h, mseqt, g.q) - E_wt
+	mut.E = computeenergies(g.J, g.h, mseqt, g.q) - E_wt
 end
 
 """

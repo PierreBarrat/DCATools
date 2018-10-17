@@ -75,7 +75,7 @@ end
 
 Basic constructor for `MutData`. 
 """
-MutData() = MutData(Array{Int64,1}(undef, 0),0.,0., Array{Mutant,1}(0),0,0)
+MutData() = MutData(Array{Int64,1}(undef, 0),0.,0., Array{Mutant,1}(undef, 0),0,0)
 
 
 """
@@ -100,11 +100,11 @@ function readmutdata(infile::String ; mapsingle = false)
 		# Info (wt, L, q) #
 		elseif l[1]=='>'
 			if l[2:3]=="wt"
-				mutdata.wt = Int64.(parse.(split(l," ")[2:end]))
+				mutdata.wt = Int64.(Meta.parse.(split(l," ")[2:end]))
 				# println("wild type: $(mutdata.wt)")
 			elseif l[2:5]=="info"
-				mutdata.L = Int64(parse(split(l," ")[2]))
-				mutdata.q = Int64(parse(split(l," ")[3]))
+				mutdata.L = Int64(Meta.parse(split(l," ")[2]))
+				mutdata.q = Int64(Meta.parse(split(l," ")[3]))
 				# println("L = $(mutdata.L), q = $(mutdata.q)")
 			else
 				println("MutationalData.jl - readmutdata: line $cl begins with '>' but does not contain any known identifier.")
@@ -113,7 +113,7 @@ function readmutdata(infile::String ; mapsingle = false)
 		# Data # 
 		else 
 			cmut = Mutant()
-			pl = parse.(split(l, " "))
+			pl = Meta.parse.(split(l, " "))
 			N = Int64(pl[1])
 			for n in 1:N
 				push!(cmut.smut, SingleMut(Int64(pl[2*n]), Int64(pl[2*n+1]), NaN, NaN)) 
