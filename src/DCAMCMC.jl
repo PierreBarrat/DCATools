@@ -3,8 +3,9 @@ module DCAMCMC
 using DCATools
 using DelimitedFiles
 using Printf
+using Statistics
 
-export doMCMC2p, samplefromgraph! 
+export doMCMC2p, samplefromgraph!, estimatetau
 
 """
 	doMCMC2p(graphfile::String,outfile::String, format::String, q::Int64,M::Int64,t::Int64 ; T= 10000, beta = 1.0, verbose = true, conf_init=rand(1:q, L))
@@ -106,7 +107,59 @@ function samplefromgraph!(g::DCAgraph, conf_init::Array{Int64,1}, conf_end::Arra
 	end
 end
 
+"""
+	estimatetau(g::DCAgraph)
 
+Attempt to estimate reasonable number of iterations between samples. Based on autocorrelation. 
+- Conservative: if the autocorrelation of the most autocorrelated spin is smaller than 0.1, eq. is reached. 
+- Fast: if the average absolute autocorrelation etc... 
+"""
+function estimatetau(g::DCAgraph ; itau = 50, M = 5000, threshold = 0.1, mode = "conservative")
+	t = doMCMC2p(g, M, itau, T=10000)
+	uptau = itau
 
+	ac = autocorr(t, g.q)
+
+	if mode == "conservative"
+		score = vec(findmax(ac, dims=2)[1])
+	elseif mode == "fast"
+		score = vec(mean(abs.(ac),dims=2))
+	end
+	if typeof(findnext(x->x<threshold, score, 1)) != Nothing
+		return findnext(x->x<threshold, score, 1) * itau
+	else
+		return size(ac,1) * itau
+	end
+end
+
+"""
+"""
+function hdist(s1::Array{Int64,1}, s2::Array{Int64,1})
+	out = 0.
+	for i in 1:size(s1,1)
+		out += Int64(s1[i]!=s2[i])
+	end
+	return out/size(s1,1)
+end
+
+"""
+"""
+function autocorr(sample::Array{Int64,2}, q::Int64)
+	(M,L) = size(sample)
+	navmin = Int64(M-round(M/10))
+	f1 = computefreqs(sample)[1]
+
+	ac = zeros(Float64, M-navmin, L)
+	for t in 1:(M-navmin)
+		for m in 1:(M-t)
+			for i in 1:L
+				ac[t,i] += Float64(sample[m,i] == sample[m+t,i]) 
+			end
+		end
+		ac[t,:] /= (M-t)
+		ac[t,:] -= vec(sum(reshape(f1,21,31).^2, dims=1)')
+	end
+	return ac
+end
 
 end
