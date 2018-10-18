@@ -5,7 +5,7 @@ using Statistics
 using LinearAlgebra
 
 """
-	struct DCAgraph
+	DCAgraph
 """
 mutable struct DCAgraph
     J::Array{Float64,2}
@@ -17,7 +17,7 @@ end
 import Base: *
 
 """
-	function *(B, g::DCAgraph)
+	*(B, g::DCAgraph)
 
 Multiply fields and couplings in `g` by scalar `B`. Useful to change temperature. 
 """
@@ -26,7 +26,7 @@ function *(B, g::DCAgraph)
 end
 
 """
-	function *(B, g::DCAgraph)
+	*(B, g::DCAgraph)
 
 Multiply fields and couplings in `g` by scalar `B`. Useful to change temperature. 
 """
