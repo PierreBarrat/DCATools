@@ -11,25 +11,27 @@ Fitting quality of pairwise frequencies. Compare frequencies `(f1_1,f2_1)` (*e.g
 5. Same as 3. for magnetizations.
 """
 function fitquality(f2_1::Array{Float64,2}, f1_1::Array{Float64,1}, f2_2::Array{Float64,2}, f1_2::Array{Float64,1}, q::Int64; withdiag=false)
-    L::Int64=size(f2_1)[1]/q
+    L = Int64(size(f2_1,1)/q)
     C1 = f2_1 - f1_1*f1_1'
     C2 = f2_2 - f1_2*f1_2'
-    id = zeros(Bool,L*q,L*q)
+    # id = zeros(Bool,L*q,L*q)
 
+    c1vec = zeros(Float64, Int64(L*(L-1)*q*q/2) )
+    c2vec = zeros(Float64, Int64(L*(L-1)*q*q/2) )
+    pos = 0
     for i = 1:L
+        # id[(i-1)*q .+ (1:q), (i-1)*q .+ (1:q)] .= withdiag
         for j = (i+1):L
-            id[(j-1)*q .+ (1:q),(i-1)*q .+ (1:q)] .= true
-        end
-    end
-    if withdiag
-        for i in 1:L
-            id[(i-1)*q .+ (1:q), (j-1)*q .+ (1:q)] .= true
+            # id[(j-1)*q .+ (1:q),(i-1)*q .+ (1:q)] .= true
+            c1vec[pos .+ (1:q^2)] .= vec(C1[(i-1)*q .+ (1:q), (j-1)*q .+ (1:q)])
+            c2vec[pos .+ (1:q^2)] .= vec(C2[(i-1)*q .+ (1:q), (j-1)*q .+ (1:q)])
+            pos += q^2
         end
     end
 
-    cc = Statistics.cor(C1[id],C2[id])
-    cslope = linreg(C1[id],C2[id])[2]
-    froc = LinearAlgebra.norm(C1[id] - C2[id])
+    cc = Statistics.cor(c1vec,c2vec)
+    cslope = linreg(c1vec,c2vec)[2]
+    froc = LinearAlgebra.norm(c1vec - c2vec)
     cm = Statistics.cor(f1_1,f1_2)
     from = LinearAlgebra.norm(f1_1-f1_2)
     return (cc,cslope,froc,cm,from)
@@ -40,8 +42,8 @@ end
 
 Simple linear regression. No longer available in Base sadly. 
 """
-function linreg(x,y)
-    return reverse([x ones(length(x))]\y)
+function linreg(x::Array{Float64,1},y::Array{Float64,1})
+    return reverse([x ones(Float64, length(x))]\y)
 end
 
 
