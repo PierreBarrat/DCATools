@@ -64,7 +64,7 @@ function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64 
 		writelog(logfile, bmlog)
 		if mod(it, meta.saveparam)==0 && savefolder!=""
 			writeparam("$(savefolder)/DCABM_it$(it)_mat.txt", g, format="mat")
-		else
+		elseif mod(it, meta.saveparam)==0
 			writeparam("DCABM_it$(it)_mat.txt", g, format="mat")
 		end
 	end
