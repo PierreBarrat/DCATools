@@ -137,7 +137,7 @@ end
 """
 	function mapsinglemut!(md::MutData)
 
-For all mutants `X` in `MutData.mutant`, find corresponding single mutants also in `MutData.mutant` and store their fitnesses and energies in `X.smut`. 
+For all mutants `X` in `md.mutant`, find corresponding single mutants also in `md.mutant` and store their fitnesses and energies in `X.smut`. 
 """
 function mapsinglemut!(md::MutData)
 	idsmut = findsinglemut(md)[2]
@@ -146,15 +146,15 @@ function mapsinglemut!(md::MutData)
 		if size(mut.smut,1)==1
 			mut.smut[1].fitness = mut.fitness
 			mut.smut[1].E = mut.E
-		# Else, we should look for all single mutants `smut` in `md` that might correspond to `mut`
 		else
+		# Else, we should look for all single mutants `smutant` in `md` that might correspond to `mut`
 			mlist = map(x->(x.i,x.a), mut.smut) # List of single mutations `(i,a)` in `mut` 
-			for smut in md.mutant[idsmut]
-				if in((smut.smut[1].i, smut.smut[1].a), mlist) # smut.smut[1] --> contains `(i,a)` of this single mutant `smut`
-					idx = findin(mlist,[(smut.smut[1].i, smut.smut[1].a)])[1] # Find the index in `mut.smut` corresponding to `smut.smut`
-					mut.smut[idx].fitness = smut.fitness 
-					mut.smut[idx].E = smut.E # We have data for this single mutant, so energy can be set to 0 
-					# Note : smut.smut[1] is not guaranteed to contain a fitness or E value at this point!! --> use smut.XXX
+			for smutant in md.mutant[idsmut]
+				if in((smutant.smut[1].i, smutant.smut[1].a), mlist) # smutant.smut[1] --> contains `(i,a)` of this single mutant `smutant`
+					idx = findall(in([(smutant.smut[1].i, smutant.smut[1].a)]),mlist)[1] # Find the index in `mut.smut` corresponding to `smut.smut`
+					mut.smut[idx].fitness = smutant.fitness 
+					mut.smut[idx].E = smutant.E # We have data for this single mutant, so energy can be set to 0 
+					# Note : smutant.smut[1] is not guaranteed to contain a fitness or E value at this point!! 
 				end
 			end
 		end
