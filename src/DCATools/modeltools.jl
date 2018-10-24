@@ -98,7 +98,7 @@ end
 Compute energies of all configurations in `sample` with graph `g`.
 """
 function computeenergies(g::DCAgraph, sample::Array{Int64,1})
-    return computeenergies(g,sample[:])
+    return computeenergies(g,reshape(sample, 1, length(sample)))[1]
 end
 
 
