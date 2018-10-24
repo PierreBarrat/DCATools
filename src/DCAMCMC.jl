@@ -5,21 +5,21 @@ using DelimitedFiles
 using Printf
 using Statistics
 
-export doMCMC2p, samplefromgraph!, estimatetau
+export doMCMC, samplefromgraph!, estimatetau, autocorr
 
 """
-	doMCMC2p(graphfile::String,outfile::String, format::String, q::Int64,M::Int64,t::Int64 ; T= 10000, beta = 1.0, verbose = true, conf_init=rand(1:q, L))
+	doMCMC(graphfile::String,outfile::String, format::String, q::Int64,M::Int64,t::Int64 ; T= 10000, beta = 1.0, verbose = true, conf_init=rand(1:q, L))
 
 Takes file as input. Untested yet. 
 """
-function doMCMC2p(graphfile::String,outfile::String, format::String, q::Int64,M::Int64,t::Int64 ; T= 10000, beta = 1.0, verbose = true, conf_init=rand(1:q, L))
+function doMCMC(graphfile::String,outfile::String, format::String, q::Int64,M::Int64,t::Int64 ; T= 10000, beta = 1.0, verbose = true, conf_init=rand(1:q, L))
     g = readparam(graphfile, format=format, q=q)
-    doMCMC2p(g, M, t, outfile=outfile, T=T, beta=beta, verbose=verbose, conf_init=conf_init)
+    doMCMC(g, M, t, outfile=outfile, T=T, beta=beta, verbose=verbose, conf_init=conf_init)
     return(sample)
 end
 
 """
-	doMCMC2p(graph::DCAgraph, M::Int64, tau::Int64 ; outfile="", T= 100000, beta = 1.0, verbose = false,conf_init=rand(1:graph.q, graph.L))
+	doMCMC(graph::DCAgraph, M::Int64, tau::Int64 ; outfile="", T= 100000, beta = 1.0, verbose = false,conf_init=rand(1:graph.q, graph.L))
 
 Sample `M` configurations from probability distribution defined by `graph`. Number of MCMC steps between configurations is `tau`. 
 
@@ -29,7 +29,7 @@ Keyword parameters:
 - beta: Default 1.0. Inverse temperature
 - conf_init: Default random. Initial configuration. 
 """
-function doMCMC2p(graph::DCAgraph, M::Int64, tau::Int64 ; outfile="", T= 50*tau, beta = 1.0, verbose = false,conf_init=rand(1:graph.q, graph.L))
+function doMCMC(graph::DCAgraph, M::Int64, tau::Int64 ; outfile="", T= 50*tau, beta = 1.0, verbose = false,conf_init=rand(1:graph.q, graph.L))
 
 	# Unnecessary allocation here?  
 	graph_local = deepcopy(graph)
@@ -55,21 +55,14 @@ function doMCMC2p(graph::DCAgraph, M::Int64, tau::Int64 ; outfile="", T= 50*tau,
             @printf("It %d/%d           \r",m+1,M)
         end
         samplefromgraph!(graph_local, sample[m,:], conf_end, tau)
-        sample[m+1,:] = conf_end
+        sample[m+1,:] .= conf_end
     end
     verbose ? println("") : print("")
     verbose ? println("Done") : print("")
 
     # Writing output
     if outfile!=""
-        if outformat=="simple"
-            writedlm(outfile,sample,' ')
-        elseif outformat=="Matteo"
-            ff = open(outfile,"w")
-            write(ff,@sprintf("%d %d %d\n",M,graph_local.L,graph_local.q))
-            writedlm(ff, sample-1, ' ')
-            close(ff)
-        end
+    	writedlm(outfile,sample,' ')
     end
     return (sample)
 end
@@ -111,14 +104,14 @@ end
 	estimatetau(g::DCAgraph)
 
 Attempt to estimate reasonable number of iterations between samples. Based on autocorrelation. 
-- Conservative: if the autocorrelation of the most autocorrelated spin is smaller than 0.1, eq. is reached. 
+- Conservative: if the autocorrelation of the most autocorrelated spin is smaller than 1/e, eq. is reached. 
 - Fast: if the average absolute autocorrelation etc... 
 """
-function estimatetau(g::DCAgraph ; itau = 50, M = 5000, threshold = 0.1, mode = "conservative")
-	t = doMCMC2p(g, M, itau, T=10000)
-	uptau = itau
+function estimatetau(g::DCAgraph ; itau = 50, M = 1000, threshold = 1/2.7, mode = "conservative")
 
+	t = doMCMC(g, M, itau, T=10000)
 	ac = autocorr(t, g.q)
+	out = Int64(0)
 
 	if mode == "conservative"
 		score = vec(findmax(ac, dims=2)[1])
@@ -126,28 +119,24 @@ function estimatetau(g::DCAgraph ; itau = 50, M = 5000, threshold = 0.1, mode = 
 		score = vec(mean(abs.(ac),dims=2))
 	end
 	if typeof(findnext(x->x<threshold, score, 1)) != Nothing
-		return findnext(x->x<threshold, score, 1) * itau
+		out =  Int64(findnext(x->x<threshold, score, 1)) * itau
 	else
-		return size(ac,1) * itau
+		out =  size(ac,1) * itau
 	end
+
+	return Int64(out)
 end
 
 """
-"""
-function hdist(s1::Array{Int64,1}, s2::Array{Int64,1})
-	out = 0.
-	for i in 1:size(s1,1)
-		out += Int64(s1[i]!=s2[i])
-	end
-	return out/size(s1,1)
-end
+	autocorr(sample::Array{Int64,2}, q::Int64)
 
-"""
+Autocorrelation of each variable, corresponding to columns `sample`, as a function of time (*i.e.* lines of `sample). 
 """
 function autocorr(sample::Array{Int64,2}, q::Int64)
 	(M,L) = size(sample)
-	navmin = Int64(M-round(M/10))
+	navmin = M-25
 	f1 = computefreqs(sample)[1]
+	null = vec(sum(reshape(f1,q,L).^2, dims=1)')
 
 	ac = zeros(Float64, M-navmin, L)
 	for t in 1:(M-navmin)
@@ -157,7 +146,7 @@ function autocorr(sample::Array{Int64,2}, q::Int64)
 			end
 		end
 		ac[t,:] /= (M-t)
-		ac[t,:] -= vec(sum(reshape(f1,21,31).^2, dims=1)')
+		ac[t,:] -= null
 	end
 	return ac
 end

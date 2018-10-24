@@ -13,6 +13,9 @@ mutable struct DCAgraph
     L::Int64
     q::Int64
 end
+function DCAgraph(L,q)
+	return DCAgraph(zeros(Float64, L*q, L*q), zeros(Float64, L*q), L, q)
+end
 
 import Base: *
 
