@@ -54,7 +54,7 @@ Output `mapping` is a dictionary such that `mapping[E] = fitness`.
 """
 function mapenergies!(md::MutData, g::DCAgraph)
 	computeenergies!(md, g)
-	mapping = Dict()
+	mapping = Dict{Float64, Float64}()
 	fitlist = Array{Float64,1}(undef, 0)
 	Elist = Array{Float64,1}(undef, 0)
 	for m in md.mutant
@@ -81,7 +81,7 @@ Output `mapping` is a dictionary such that `mapping[E] = fitness`.
 """
 function mapenergies(md::MutData, g::DCAgraph)
 	computeenergies!(md, g)
-	mapping = Dict()
+	mapping = Dict{Float64, Float64}()
 	fitlist = Array{Float64,1}(undef, 0)
 	Elist = Array{Float64,1}(undef, 0)
 	for m in md.mutant
