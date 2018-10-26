@@ -43,27 +43,30 @@ function computegradient(sample::Array{Int64,2}, f1::Array{Float64,1}, f2::Array
 end
 
 """
-	computegradient(md::MutData, mapping::Dict{Float64, Float64})
+	computegradient(md::MutData, mapping::Dict{Float64, Float64}, meta::BMmeta)
 
 Gradient due to differences between measured fitness and energies. Compute differences between energies and fitness over all mutants in `md`. Result is not scaled by sample size or by λ. 
 """
-function computegradient(md::MutData, mapping::Dict{Float64, Float64})
+function computegradient(md::MutData, mapping::Dict{Float64, Float64}, meta::BMmeta)
 	grad = DCAgrad(md.L,md.q)
 
 	for mut in md.mutant
 		if size(mut.smut,1) == 1 # gradient on fields
 			i = mut.smut[1].i
 			a = mut.smut[1].a
-			grad.gradh[(i-1)*md.q + a] += mapping[mut.E] - mut.fitness
+			grad.gradh[(i-1)*md.q + a] += mut.fitness - mapping[mut.E]
 		else size(mut.smut,1) == 2 # gradient on coupling
 			i = mut.smut[1].i
 			a = mut.smut[1].a
 			j = mut.smut[2].j
 			b = mut.smut[2].b
-			grad.gradJ[(i-1)*md.q + a, (j-1)*md.q + b] += mapping[mut.E] - mut.fitness
+			grad.gradJ[(i-1)*md.q + a, (j-1)*md.q + b] += mut.fitness - mapping[mut.E] 
 		end
 	end
 	grad.gradJ = grad.gradJ + grad.gradJ'
+	grad.gradh .*= meta.lambda / (1 - meta.lambda) / meta.Mmsa
+	grad.gradJ .*= meta.lambda / (1 - meta.lambda) / meta.Mmsa
+	return grad
 end
 
 

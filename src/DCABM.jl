@@ -4,6 +4,7 @@ using DCATools
 using DCAMutLand
 using DCAMCMC
 using Printf
+using Statistics
 
 export DCAgrad, gradequal
 
@@ -24,7 +25,8 @@ function DCAgrad(L::Int64, q::Int64)
     return DCAgrad(zeros(Float64, L*q,L*q), zeros(Float64,L*q), zeros(Float64, L*q,L*q), zeros(Float64,L*q), L, q)
 end
 
-import Base: +
+import Base: +, *
+
 
 """
 	+(A::DCAgrad, B::DCAgrad)
@@ -67,6 +69,9 @@ struct BMmeta
     adaptMup::Float64
     Mmax::Int64
     #
+    lambda::Float64
+    Mmsa::Int64
+    #
     saveparam::Int64
 end
 
@@ -86,9 +91,10 @@ mutable struct BMlog
     corcor
     slopecor
     cormag
+    cormutants
 end
 function BMlog()
-    return BMlog(0,0,0,0,0,0,0,0,0,0)
+    return BMlog(0,0,0,0,0,0,0,0,0,0,0)
 end
 
 
