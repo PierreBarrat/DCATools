@@ -135,7 +135,7 @@ end
 
 
 """
-	function mapsinglemut!(md::MutData)
+	mapsinglemut!(md::MutData)
 
 For all mutants `X` in `md.mutant`, find corresponding single mutants also in `md.mutant` and store their fitnesses and energies in `X.smut`. 
 """
@@ -166,18 +166,26 @@ end
 # Energies should be in the wt gauge, ie differences to the wt energy. 
 # --> I don't care about the energy of the wt in epistasis, I just add differential effects wr/ to the wt
 """
-	function computeepistasis!(mut::Mutant)
+	computeepistasis!(mut::Mutant)
 
 Computes difference between sum of energies and fitnesses of the single mutants composing `mut`, and that of `mut` itself.
 """
 function computeepistasis!(mut::Mutant)
-	mut.dfitness = mut.fitness - mapreduce(x->x.fitness, +, 0., mut.smut)
-	mut.dE = mut.E - mapreduce(x->x.E, +, 0., mut.smut)
+	mut.dfitness = mut.fitness - mapreduce(x->x.fitness, +, mut.smut, init=0.)
+	mut.dE = mut.E - mapreduce(x->x.E, +, mut.smut, init=0.)
 end
 
+"""
+	computeepistasis!(md::MutData)
+
+Apply `computeepistasis!` on all mutants in `md`. 
+"""
+function computeepistasis!(md::MutData)
+	map(x->computeepistasis!(x), md.mutant)
+end
 
 """
-	function findsinglemut(md::MutData, i::Int64)
+	findsinglemut(md::MutData, i::Int64)
 
 Find all single mutants in `md` corresponding to position `i`.
 """
@@ -194,7 +202,7 @@ function findsinglemut(md::MutData, i::Int64)
 end
 
 """
-	function findsinglemut(md::MutData)
+	findsinglemut(md::MutData)
 
 Find all single mutants in `md`. 
 """
@@ -211,7 +219,7 @@ function findsinglemut(md::MutData)
 end
 
 """
-	function finddoublemut(md::MutData, i::Int64, j::Int64)
+	finddoublemut(md::MutData, i::Int64, j::Int64)
 
 Find all double mutants in `md` corresponding to position `i` and `j`.
 """
@@ -229,7 +237,7 @@ end
 
 
 """
-	function finddoublemut(md::MutData)
+	finddoublemut(md::MutData)
 
 Find all double mutants in `md`.
 """
