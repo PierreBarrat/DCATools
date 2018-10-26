@@ -19,7 +19,7 @@ export computeenergies!, mapenergies!, mapenergies!, mapenergies
 Compute energies of all `Mutant` in `md.mutant` using `g`. 
 """
 function computeenergies!(md::MutData, g::DCAgraph)
-	md.E_wt = computeenergies(g.J, g.h, md.wt, g.q)
+	md.E_wt = computeenergies(g, md.wt)
 	for mut in md.mutant
 		computeenergies!(mut, g, md.wt, md.E_wt)
 	end
@@ -36,10 +36,10 @@ function computeenergies!(mut::Mutant, g::DCAgraph, wt::Array{Int64,1}, E_wt::Fl
 	for smut in mut.smut
 		mseq[smut.i] = smut.a
 		mseqt[smut.i] = smut.a
-		smut.E = computeenergies(g.J, g.h, mseq, g.q) - E_wt
+		smut.E = computeenergies(g, mseq) .- E_wt
 		mseq[smut.i] = wt[smut.i]
 	end
-	mut.E = computeenergies(g.J, g.h, mseqt, g.q) - E_wt
+	mut.E = computeenergies(g, mseqt) .- E_wt
 end
 
 """
@@ -54,7 +54,7 @@ Output `mapping` is a dictionary such that `mapping[E] = fitness`.
 """
 function mapenergies!(md::MutData, g::DCAgraph)
 	computeenergies!(md, g)
-	mapping = Dict()
+	mapping = Dict{Float64, Float64}()
 	fitlist = Array{Float64,1}(undef, 0)
 	Elist = Array{Float64,1}(undef, 0)
 	for m in md.mutant
@@ -81,7 +81,7 @@ Output `mapping` is a dictionary such that `mapping[E] = fitness`.
 """
 function mapenergies(md::MutData, g::DCAgraph)
 	computeenergies!(md, g)
-	mapping = Dict()
+	mapping = Dict{Float64, Float64}()
 	fitlist = Array{Float64,1}(undef, 0)
 	Elist = Array{Float64,1}(undef, 0)
 	for m in md.mutant
