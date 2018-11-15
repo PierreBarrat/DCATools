@@ -25,7 +25,13 @@ end
 """
 	bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64)
 
-Main BM learning function. Keywords correspond to starting point and meta parameters of the learning process. 
+Main BM learning function. Keywords correspond to starting point and meta parameters of the learning process.
+
+Some useful ones
+- `nit`: Number of iterations of the gradient descent. 
+- `savefolder`: folder for output files (log and parameters). If unspecified or `""`, current directory is used.
+- `saveparam`: number of iterations after which parameters are saved.  
+- `logfile`: name of logfile. 
 """
 function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64 ; 
 	ginit::DCAgraph = DCAgraph(L,q), gradinit=DCAgrad(L, q), 
