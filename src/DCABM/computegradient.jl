@@ -45,7 +45,7 @@ end
 """
 	computegradient(md::MutData, mapping::Dict{Float64, Float64}, meta::BMmeta)
 
-Gradient due to differences between measured fitness and energies. Compute differences between energies and fitness over all mutants in `md`. Result is not scaled by sample size or by λ. 
+Gradient due to differences between measured fitness and energies. Compute differences between energies and fitness over all mutants in `md`. Result is by sample size or by λ. 
 """
 function computegradient(md::MutData, mapping::Dict{Float64, Float64}, meta::BMmeta)
 	grad = DCAgrad(md.L,md.q)
@@ -98,7 +98,7 @@ end
 """
 	computel1(g::DCAgraph, lambda::Float64)
 
-Return gradient corresponding to l1 regularization. 
+Return gradient corresponding to l1 regularization.
 """
 function computel1(g::DCAgraph, lambda::Float64)
 

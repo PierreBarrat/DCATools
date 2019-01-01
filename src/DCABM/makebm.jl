@@ -181,7 +181,7 @@ end
 """
 	bminit!(grad::DCAgrad, g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, meta::BMmeta)
 
-Initialize gradient and sample with null values. Step sizes for gradient are initialized using `meta`. If the gradient was a non-null one, ie if gradient values or stepsizes are different from 0, then the full gradient object remains untouched. 
+Initialize gradient and sample with null values. Step sizes for gradient are initialized using `meta`. If the gradient was a non-null one, *ie* if gradient values or stepsizes are different from 0, then the full gradient object remains untouched. 
 """
 function bminit!(grad::DCAgrad, g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, meta::BMmeta, bmlog::BMlog)
 	sampleinit = zeros(Int64, bmlog.samplesize, g.L)
