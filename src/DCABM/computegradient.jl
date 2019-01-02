@@ -43,31 +43,6 @@ function computegradient(sample::Array{Int64,2}, f1::Array{Float64,1}, f2::Array
 end
 
 """
-	computegradient(md::MutData, mapping::Dict{Float64, Float64})
-
-Gradient due to differences between measured fitness and energies. Compute differences between energies and fitness over all mutants in `md`. Result is not scaled by sample size or by λ. 
-"""
-function computegradient(md::MutData, mapping::Dict{Float64, Float64})
-	grad = DCAgrad(md.L,md.q)
-
-	for mut in md.mutant
-		if size(mut.smut,1) == 1 # gradient on fields
-			i = mut.smut[1].i
-			a = mut.smut[1].a
-			grad.gradh[(i-1)*md.q + a] += mapping[mut.E] - mut.fitness
-		else size(mut.smut,1) == 2 # gradient on coupling
-			i = mut.smut[1].i
-			a = mut.smut[1].a
-			j = mut.smut[2].j
-			b = mut.smut[2].b
-			grad.gradJ[(i-1)*md.q + a, (j-1)*md.q + b] += mapping[mut.E] - mut.fitness
-		end
-	end
-	grad.gradJ = grad.gradJ + grad.gradJ'
-end
-
-
-"""
 	computel2!(grad::DCAgrad, g::DCAgraph, lambda::Float64)
 """
 function computel2!(grad::DCAgrad, g::DCAgraph, lambda::Float64)

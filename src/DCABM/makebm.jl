@@ -32,6 +32,8 @@ Some useful ones
 - `savefolder`: folder for output files (log and parameters). If unspecified or `""`, current directory is used.
 - `saveparam`: number of iterations after which parameters are saved.  
 - `logfile`: name of logfile. 
+- `ginit`: `DCAgraph` object. Initial values of parameters. 
+- `gradinit`: `DCAgrad` object. Initial value of gradient. Useful to restart a learning. Can also be used to train the model only on a subset of parameters by setting initial `stepJ` and `steph` to non zero values for those. 
 """
 function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64 ; 
 	ginit::DCAgraph = DCAgraph(L,q), gradinit=DCAgrad(L, q), 
@@ -129,7 +131,7 @@ end
 """
 	bminit!(grad::DCAgrad, g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, meta::BMmeta)
 
-Initialize gradient and sample with null values. Step sizes for gradient are initialized using `meta`. 
+Initialize gradient and sample with null values. Step sizes for gradient are initialized using `meta`. If the gradient was a non-null one, *ie* if gradient values or stepsizes are different from 0, then the full gradient object remains untouched.
 """
 function bminit!(grad::DCAgrad, g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, meta::BMmeta, bmlog::BMlog)
 	sampleinit = zeros(Int64, bmlog.samplesize, g.L)
