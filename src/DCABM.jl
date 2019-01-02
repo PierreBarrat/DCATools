@@ -25,7 +25,7 @@ function DCAgrad(L::Int64, q::Int64)
     return DCAgrad(zeros(Float64, L*q,L*q), zeros(Float64,L*q), zeros(Float64, L*q,L*q), zeros(Float64,L*q), L, q)
 end
 
-import Base: +, *
+import Base: +
 
 
 """
