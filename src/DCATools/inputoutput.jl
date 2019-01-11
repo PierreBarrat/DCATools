@@ -104,7 +104,7 @@ Write graph `g` to file `outfile`:
 """
 function writeparam(outfile::String, g::DCAgraph; format="mat")
 	if format == "mat"
-		writedlm(outfile, [g.J ; g.h'], " ")
+		writedlm(outfile, [round.(g.J, digits = 5) ; round.(g.h', digits = 5)], " ")
 	elseif format == "mcmc"
 		writeparammcmc(outfile,g)
 	else
