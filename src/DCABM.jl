@@ -73,6 +73,8 @@ struct BMmeta
     Mmsa::Int64
     #
     saveparam::Int64
+    #
+    nprocs::Int64
 end
 
 """

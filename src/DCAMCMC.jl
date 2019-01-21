@@ -17,7 +17,7 @@ Takes file as input. Untested yet.
 """
 function doMCMC(graphfile::String,outfile::String, format::String, q::Int64,M::Int64,t::Int64 ; T= 10000, beta = 1.0, verbose = true, conf_init=rand(1:q, L))
     g = readparam(graphfile, format=format, q=q)
-    smaple = doMCMC(g, M, t, outfile=outfile, T=T, beta=beta, verbose=verbose, conf_init=conf_init)
+    sample = doMCMC(g, M, t, outfile=outfile, T=T, beta=beta, verbose=verbose, conf_init=conf_init)
     return(sample)
 end
 
@@ -88,7 +88,7 @@ function doMCMC(graph::DCAgraph, M::Int64, tau::Int64 ; outfile="", T= 50*tau, b
 
     # Sampling
     verbose ? println("Sampling") : print("")
-    for m = 1:M-1
+    @time for m = 1:M-1
         if verbose && mod(m+1,500)==0
             @printf("It %d/%d           \r",m+1,M)
         end
@@ -145,7 +145,7 @@ Attempt to estimate reasonable number of iterations between samples. Based on au
 - Conservative: if the autocorrelation of the most autocorrelated spin is smaller than 1/e, eq. is reached. 
 - Fast: if the average absolute autocorrelation etc... 
 """
-function estimatetau(g::DCAgraph ; itau = 50, M = 1000, threshold = 1/2.7, mode = "conservative")
+function estimatetau(g::DCAgraph ; itau = 2, M = 1000, threshold = 1/2.7, mode = "conservative")
 
 	t = doMCMC(g, M, itau, T=10000)
 	ac = autocorr(t, g.q)

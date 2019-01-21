@@ -45,6 +45,7 @@ function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64 
 	saveparam = 10, savefolder="",
 	mutants::MutData = MutData(), lambda=0, Mmsa = 1, 
 	nit = 50, 
+	nprocs = 1,
 	logfile="log.txt")
 	
 	# Initializing save directory
@@ -54,7 +55,7 @@ function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64 
 	end
 
 	# Initializing meta data and log
-	meta = BMmeta(l2, l1, basestepJ, basesteph, stepJmax, stephmax, aJup, aJdown, ahup, ahdown, adaptMup, Mmax, lambda, Mmsa, saveparam)
+	meta = BMmeta(l2, l1, basestepJ, basesteph, stepJmax, stephmax, aJup, aJdown, ahup, ahdown, adaptMup, Mmax, lambda, Mmsa, saveparam, nprocs)
 	bmlog = BMlog()
 	bmlog.samplesize = samplesize
 
@@ -89,9 +90,9 @@ end
 """
 	bmsample(g::DCAgraph, M::Int64)
 """
-function bmsample(g::DCAgraph, M::Int64)
+function bmsample(g::DCAgraph, M::Int64, nprocs)
 	tau = 3*estimatetau(g, mode="fast")
-	return doMCMC(g, M, tau, T = 20*tau), tau
+	return doMCMC(g, M, tau, T = 20*tau, nprocs = nprocs), tau
 end
 
 """
@@ -102,7 +103,7 @@ Compute gradient for current graph `g` and updates it. Target frequencies are `f
 function bmstep!(g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, md::MutData, prevgrad::DCAgrad, meta::BMmeta, bmlog::BMlog)
 
 	# Compute new sample
-	sample, tau = bmsample(g, bmlog.samplesize)
+	sample, tau = bmsample(g, bmlog.samplesize, meta.nprocs)
 	bmlog.tau = tau
 
 	# Mapping between fitness and energies
@@ -147,7 +148,7 @@ Compute gradient for current graph `g` and updates it. Target frequencies are `f
 function bmstep!(g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, prevgrad::DCAgrad, meta::BMmeta, bmlog::BMlog)
 
 	# Compute new sample
-	sample, tau = bmsample(g, bmlog.samplesize)
+	sample, tau = bmsample(g, bmlog.samplesize, meta.nprocs)
 	bmlog.tau = tau
 
 	# Compute gradient and regularization effect
