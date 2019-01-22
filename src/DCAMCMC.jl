@@ -88,7 +88,7 @@ function doMCMC(graph::DCAgraph, M::Int64, tau::Int64 ; outfile="", T= 50*tau, b
 
     # Sampling
     verbose ? println("Sampling") : print("")
-    @time for m = 1:M-1
+    for m = 1:M-1
         if verbose && mod(m+1,500)==0
             @printf("It %d/%d           \r",m+1,M)
         end
