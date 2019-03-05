@@ -108,7 +108,7 @@ end
 Sample for `tau` iterations from probability defined by `g`, starting with configuration `conf_init` and storing final configuration in `conf_end`. 
 """
 function samplefromgraph!(g::DCAgraph, conf_init::Array{Int64,1}, conf_end::Array{Int64,1}, tau::Int64)
-	rng = MersenneTwister(myid())
+	rng = MersenneTwister(rand(1:100000))
 	E = 0.
 	q = g.q
 	L = g.L
@@ -128,11 +128,10 @@ function samplefromgraph!(g::DCAgraph, conf_init::Array{Int64,1}, conf_end::Arra
         	id_i_a = (i-1)*q+a
         	id_i_b = (i-1)*q+b
         	E = g.h[id_i_a] - g.h[id_i_b]
-        	for j = 1:(i-1)
-        		E += g.J[id_i_a, (j-1)*q+conf_end[j]] - g.J[id_i_a, (j-1)*q+conf_end[j]]
-        	end
-        	for j = (i+1):L
-        		E += g.J[id_i_a, (j-1)*q+conf_end[j]] - g.J[id_i_a, (j-1)*q+conf_end[j]]
+        	for j = 1:L
+        		if j != i
+        			E += g.J[id_i_a, (j-1)*q+conf_end[j]] - g.J[id_i_b, (j-1)*q+conf_end[j]]
+        		end
         	end
 
         	if E<=0. || exp(-E) > rand(rng, Erng)

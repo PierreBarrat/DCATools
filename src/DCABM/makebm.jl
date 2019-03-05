@@ -39,7 +39,7 @@ function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64 
 	ginit::DCAgraph = DCAgraph(L,q), gradinit=DCAgrad(L, q), 
 	l2 = 0.01, l1 = 0.,
 	samplesize = 1000, 
-	basestepJ = 0.05, basesteph = 0.05,  stepJmax = 1., stephmax = 1.,
+	basestepJ = 0.05, basesteph = 0.05,  stepJmax = 0.5, stephmax = 0.5,
 	aJup = 1.2, aJdown = 0.5, ahup = 1.2, ahdown = 0.5, 
 	adaptMup = 1.2, Mmax = 200000, 
 	saveparam = 10, savefolder="",
