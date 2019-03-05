@@ -6,7 +6,7 @@ using Printf
 using Statistics
 using Distributed
 using Random
-using Profile
+
 
 export doMCMC, samplefromgraph!, estimatetau, autocorr
 
@@ -24,18 +24,16 @@ end
 """
 """
 function doMCMC_par(graph::DCAgraph, M::Int64, tau::Int64, nprocs::Int64; T= 50*tau, beta = 1.0, verbose = false)
-	if length(workers()) != nprocs
-		@warn "Number of workers ($(length(workers()))) different from `nprocs=$nprocs` value."
+	if length(workers()) < nprocs
+		@error "Number of workers ($(length(workers()))) smaller than `nprocs=$nprocs`."
 	end
 	Mloc = cld(M, nprocs)
-	if Mloc != M/nprocs
-		@warn "Sample size `M=$M` not divisible by `nproc=$nprocs`"
-	end
 
 	if verbose
 		println("Starting $nprocs MCMC chains of $Mloc samples each.")
 	end
 	sample = @distributed (vcat) for n in 1:nprocs
+		# gt = deepcopy(graph); 
 		doMCMC(graph, Mloc, tau, T = T, beta = beta, outfile="", verbose = false, conf_init = rand(1:graph.q, graph.L), nprocs = 1)
 	end
 	return sample
@@ -110,32 +108,39 @@ end
 Sample for `tau` iterations from probability defined by `g`, starting with configuration `conf_init` and storing final configuration in `conf_end`. 
 """
 function samplefromgraph!(g::DCAgraph, conf_init::Array{Int64,1}, conf_end::Array{Int64,1}, tau::Int64)
+	rng = MersenneTwister(myid())
 	E = 0.
 	q = g.q
 	L = g.L
 
+	brng = Random.Sampler(rng, Set(1:q))
+	Erng = Random.Sampler(rng, Float64)
 	copyto!(conf_end, conf_init)
+
 	@fastmath @inbounds for t in 1:tau
 		for i in 1:L
 			a = conf_end[i]
-			b = Random.rand(1:q) 
+			b = rand(rng, brng)
 			while b==a
-				b = Random.rand(1:q)
+				b = rand(rng, brng)
 			end
+
         	id_i_a = (i-1)*q+a
         	id_i_b = (i-1)*q+b
         	E = g.h[id_i_a] - g.h[id_i_b]
-        	for j = 1:L
-        	    if j!=i
-        	        E += g.J[(j-1)*q+conf_end[j], id_i_a] - g.J[(j-1)*q+conf_end[j], id_i_b]
-        	    end
+        	for j = 1:(i-1)
+        		E += g.J[id_i_a, (j-1)*q+conf_end[j]] - g.J[id_i_a, (j-1)*q+conf_end[j]]
+        	end
+        	for j = (i+1):L
+        		E += g.J[id_i_a, (j-1)*q+conf_end[j]] - g.J[id_i_a, (j-1)*q+conf_end[j]]
         	end
 
-        	if E<=0 || exp(-E) > Random.rand() 
+        	if E<=0. || exp(-E) > rand(rng, Erng)
         		conf_end[i] = b
         	end
     	end
 	end
+	nothing
 end
 
 """
@@ -145,7 +150,7 @@ Attempt to estimate reasonable number of iterations between samples. Based on au
 - Conservative: if the autocorrelation of the most autocorrelated spin is smaller than 1/e, eq. is reached. 
 - Fast: if the average absolute autocorrelation etc... 
 """
-function estimatetau(g::DCAgraph ; itau = 2, M = 1000, threshold = 1/2.7, mode = "conservative")
+function estimatetau(g::DCAgraph ; itau = 1, M = 1000, threshold = 1/2.7, mode = "conservative")
 
 	t = doMCMC(g, M, itau, T=10000)
 	ac = autocorr(t, g.q)
