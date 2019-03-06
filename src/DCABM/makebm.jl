@@ -106,17 +106,26 @@ function bmstep!(g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, md::Mu
 	sample, tau = bmsample(g, bmlog.samplesize, meta.nprocs)
 	bmlog.tau = tau
 
-	# Mapping between fitness and energies
-	computeenergies!(md, g)
-	mapping = mapenergies(md, g)
-	bmlog.cormutants = cor(map(x->x.fitness, md.mutant), map(x->mapping[x.E], md.mutant))
 
-	# Compute gradient and regularization effect
+	# Compute gradient from frequency difference and l2 regularization
 	freqgrad, p1, p2 = computegradient(sample, f1, f2, g.q)
-	mutgrad = computegradient(md, mapping, meta)
 	reg = computel2(g, meta.l2)
-	regl1 = computel1(g, meta.l1)
-	gradtot = freqgrad + mutgrad + reg + regl1
+	gradtot = freqgrad + reg
+
+	# If l1 regularization exists, add it to gradient
+	if meta.l1 != 0
+		gradtot += computel1(g, meta.l1)
+	end
+
+	# If we're also fitting mutants, add it to gradient
+	bmlog.cormutants = 0.
+	if !isempty(md.mutant)
+		computeenergies!(md, g)
+		mapping = mapenergies(md, g)
+		bmlog.cormutants = cor(map(x->x.fitness, md.mutant), map(x->mapping[x.E], md.mutant))
+		mutgrad = computegradient(md, mapping, meta)
+		gradtot += mutgrad
+	end
 
 	# Determine step size -- adaptive
 	computestepsize!(gradtot, prevgrad, meta)

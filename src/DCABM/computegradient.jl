@@ -6,25 +6,16 @@ export computegradient, computel2
 
 Add gradient `grad` to graph `g`, modifying it. 
 """
-function updateparameters!(g::DCAgraph, grad::DCAgrad)
-	g.J .+= grad.stepJ .* grad.gradJ
-	g.h .+= grad.steph .* grad.gradh
+function updateparameters!(g::DCAgraph, grad::DCAgrad, f1::Array{Float64,1})
+	# # This is without reparametrization
+	# g.J .+= grad.stepJ .* grad.gradJ
+	# g.h .+= grad.steph .* grad.gradh
+
+	# With reparametrization
+	g.J += grad.stepJ .* grad.gradJ
+	g.h += grad.steph .* grad.gradh - 1/2 * (grad.stepJ .* grad.gradJ) * f1
 end
 
-
-"""
-	computegradient!(grad::DCAgrad, sample::Array{Int64,2}, f1::Array{Float64,1}, f2::Array{Float64,2})
-
-Compute gradient corresponding to difference between pairwise frequencies measured in `sample` and targets `f1` and `f2`. Modify input `grad` in order to avoid allocation. Step size are set to 0.
-"""
-function computegradient!(grad::DCAgrad, sample::Array{Int64,2}, f1::Array{Float64,1}, f2::Array{Float64,2})
-	p1, p2 = computefreqs(sample)
-	grad.gradJ = f2-p2
-	grad.gradh = f1-p1
-	grad.stepJ .*= 0
-	grad.steph .*= 0
-	return grad,p1,p2
-end
 
 """
 	computegradient(sample::Array{Int64,2}, f1::Array{Float64,1}, f2::Array{Float64,2}, q::Int64)
@@ -36,8 +27,16 @@ function computegradient(sample::Array{Int64,2}, f1::Array{Float64,1}, f2::Array
 	L = size(sample,2)
 
 	grad = DCAgrad(L,q)
-	grad.gradJ = f2-p2
-	grad.gradh = f1-p1
+	# grad.gradJ = f2 - p2
+	# grad.gradh = f1 - p1
+
+	# With reparametrization
+	# These are the gradients for ϕ_i and ϕ_ij
+	c = f2 - f1*f1'
+	γ = p2 - p1*p1'
+	δ = (p1-f1)*(p1-f1)'
+	grad.gradJ = c - γ - δ
+	grad.gradh = f1 - p1 
 
 	return grad, p1, p2
 end
