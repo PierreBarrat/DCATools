@@ -225,7 +225,7 @@ end
 
 Update `M` based on gradient consistency. If cosine between the two gradient is smaller than `threshold`, `M` is increased. 
 """
-function updateM!(bmlog::BMlog, meta::BMmeta ; threshold = 0.4)
+function updateM!(bmlog::BMlog, meta::BMmeta ; threshold = 0.6)
 	if bmlog.gradconstJ < threshold
 		bmlog.samplesize = min(meta.Mmax, Int64(round(meta.adaptMup * bmlog.samplesize)))
 	end
