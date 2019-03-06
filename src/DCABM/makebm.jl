@@ -131,7 +131,7 @@ function bmstep!(g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, md::Mu
 	computestepsize!(gradtot, prevgrad, meta)
 
 	# Update parameters
-	updateparameters!(g, gradtot)
+	updateparameters!(g, gradtot, f1)
 
 	# Updating M and computing gradient norm 
 	bmlog.gradnorm, bmlog.gradnormh, bmlog.gradnormJ = gradnorm(gradtot)
@@ -170,7 +170,7 @@ function bmstep!(g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, prevgr
 	computestepsize!(gradtot, prevgrad, meta)
 
 	# Update parameters
-	updateparameters!(g, gradtot)
+	updateparameters!(g, gradtot, f1)
 
 	# Updating M and computing gradient norm 
 	bmlog.gradnorm, bmlog.gradnormh, bmlog.gradnormJ = gradnorm(gradtot)
@@ -199,6 +199,9 @@ function bminit!(grad::DCAgrad, g::DCAgraph, f1::Array{Float64,1}, f2::Array{Flo
 	if gradequal(DCAgrad(g.L, g.q), grad)
 		grad.stepJ .= meta.basestepJ
 		grad.steph .= meta.basesteph
+		for i in 1:grad.L
+			grad.stepJ[(i-1)*grad.q .+ (1:grad.q), (i-1)*grad.q .+ (1:grad.q)] .= 0
+		end
 	end
 
 	return sampleinit
