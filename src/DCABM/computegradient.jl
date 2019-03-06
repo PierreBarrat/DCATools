@@ -72,9 +72,10 @@ end
 """
 	computel2!(grad::DCAgrad, g::DCAgraph, lambda::Float64)
 """
-function computel2!(grad::DCAgrad, g::DCAgraph, lambda::Float64)
+function computel2!(grad::DCAgrad, g::DCAgraph, lambda::Float64, f1::Array{Float64,1})
 	grad.gradJ = -lambda*g.J
-	grad.gradh = -lambda*g.h
+	# Regularization for ϕ_i = h_i + ϕ_ij * fj
+	grad.gradh = -lambda * (g.h + 1/2 * g.J * fj)
 	grad.stepJ .*= 0
 	grad.steph .*= 0
 	return grad
