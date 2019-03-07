@@ -59,7 +59,7 @@ function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64 
 	end
 
 	# Initializing meta data and log
-	meta = BMmeta(l2, l1, basestepJ, basesteph, stepJmax, stephmax, aJup, aJdown, ahup, ahdown, adaptMup, Mmax, lambda, Mmsa, saveparam, nprocs)
+	meta = BMmeta(l2, l1, basestepJ, basesteph, stepJmax, stephmax, aJup, aJdown, ahup, ahdown, adaptMup, Mmax, integrative_lambda, integrative_M, saveparam, nprocs)
 	bmlog = BMlog()
 	bmlog.samplesize = samplesize
 
@@ -118,7 +118,7 @@ function bmstep!(g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, md::Mu
 
 	# Compute gradient from frequency difference and l2 regularization
 	freqgrad, p1, p2 = computegradient(sample, f1, f2, g.q)
-	reg = computel2(g, meta.l2)
+	reg = computel2(g, meta.l2, f1)
 	gradtot = freqgrad + reg
 
 	# If l1 regularization exists, add it to gradient
@@ -140,7 +140,7 @@ function bmstep!(g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, md::Mu
 	computestepsize!(gradtot, prevgrad, meta)
 
 	# Update parameters
-	updateparameters!(g, gradtot)
+	updateparameters!(g, gradtot, f1)
 
 	# Updating M and computing gradient norm 
 	bmlog.gradnorm, bmlog.gradnormh, bmlog.gradnormJ = gradnorm(gradtot)

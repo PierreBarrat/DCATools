@@ -63,34 +63,23 @@ function computegradient(md::MutData, mapping::Dict{Float64, Float64}, meta::BMm
 		end
 	end
 	grad.gradJ = grad.gradJ + grad.gradJ'
-	grad.gradh .*= meta.lambda / (1 - meta.lambda) / meta.Mmsa
-	grad.gradJ .*= meta.lambda / (1 - meta.lambda) / meta.Mmsa
+	grad.gradh .*= meta.integrative_lambda / (1 - meta.integrative_lambda) / meta.integrative_M
+	grad.gradJ .*= meta.integrative_lambda / (1 - meta.integrative_lambda) / meta.integrative_M
 	return grad
 end
 
-
-"""
-	computel2!(grad::DCAgrad, g::DCAgraph, lambda::Float64)
-"""
-function computel2!(grad::DCAgrad, g::DCAgraph, lambda::Float64, f1::Array{Float64,1})
-	grad.gradJ = -lambda*g.J
-	# Regularization for ϕ_i = h_i + ϕ_ij * fj
-	grad.gradh = -lambda * (g.h + 1/2 * g.J * fj)
-	grad.stepJ .*= 0
-	grad.steph .*= 0
-	return grad
-end
 
 """
 	computel2(g::DCAgraph, lambda::Float64)
 
 Return gradient corresponding to l2 regularization. 
 """
-function computel2(g::DCAgraph, lambda::Float64)
+function computel2(g::DCAgraph, lambda::Float64, f1::Array{Float64, 1})
 
 	grad = DCAgrad(g.L, g.q)
 	grad.gradJ = -lambda*g.J
-	grad.gradh = -lambda*g.h
+	# grad.gradh = -lambda*g.h
+	grad.gradh = -lambda * (g.h + 1/2 * g.J * f1)
 
 	return grad
 end

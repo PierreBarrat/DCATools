@@ -69,8 +69,8 @@ struct BMmeta
     adaptMup::Float64
     Mmax::Int64
     #
-    lambda::Float64
-    Mmsa::Int64
+    integrative_lambda::Float64
+    integrative_M::Int64
     #
     saveparam::Int64
     #
