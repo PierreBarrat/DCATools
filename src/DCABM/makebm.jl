@@ -41,7 +41,7 @@ function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64 
 	samplesize = 1000, 
 	basestepJ = 0.05, basesteph = 0.05,  stepJmax = 1., stephmax = 1.,
 	aJup = 1.2, aJdown = 0.5, ahup = 1.2, ahdown = 0.5, 
-	adaptMup = 1.5, Mmax = 200000, 
+	adaptMup = 1.05, Mmax = 100000, 
 	saveparam = 10, savefolder="",
 	mutants::MutData = MutData(), lambda=0, Mmsa = 1, 
 	nit = 50, 
@@ -225,7 +225,7 @@ end
 
 Update `M` based on gradient consistency. If cosine between the two gradient is smaller than `threshold`, `M` is increased. 
 """
-function updateM!(bmlog::BMlog, meta::BMmeta ; threshold = 0.7)
+function updateM!(bmlog::BMlog, meta::BMmeta ; threshold = 0.6)
 	if bmlog.gradconstJ < threshold
 		bmlog.samplesize = min(meta.Mmax, Int64(round(meta.adaptMup * bmlog.samplesize)))
 	end
