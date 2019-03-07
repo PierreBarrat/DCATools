@@ -98,7 +98,7 @@ end
 """
 	computel1(g::DCAgraph, lambda::Float64)
 
-Return gradient corresponding to l1 regularization.
+Return gradient corresponding to l1 regularization. Experimental, should not be used. 
 """
 function computel1!(g::DCAgraph, cgrad::DCAgrad, lambda::Float64)
 	# If J = 0 and the gradient is smaller than lambda, then J should not move 

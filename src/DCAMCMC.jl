@@ -149,9 +149,9 @@ Attempt to estimate reasonable number of iterations between samples. Based on au
 - Conservative: if the autocorrelation of the most autocorrelated spin is smaller than 1/e, eq. is reached. 
 - Fast: if the average absolute autocorrelation etc... 
 """
-function estimatetau(g::DCAgraph ; itau = 1, M = 1000, threshold = 1/2.7, mode = "conservative")
+function estimatetau(g::DCAgraph ; itau = 1, M = 1000, threshold = 1/2.7, mode = "conservative", nprocs=1)
 
-	t = doMCMC(g, M, itau, T=10000)
+	t = doMCMC(g, M, itau, T=10000, nprocs=nprocs)
 	ac = autocorr(t, g.q)
 	out = Int64(0)
 
