@@ -100,12 +100,33 @@ end
 
 Return gradient corresponding to l1 regularization.
 """
-function computel1(g::DCAgraph, lambda::Float64)
-
+function computel1!(g::DCAgraph, cgrad::DCAgrad, lambda::Float64)
+	# If J = 0 and the gradient is smaller than lambda, then J should not move 
+	# Else, if J != 0, add lambda to the gradient
 	grad = DCAgrad(g.L, g.q)
-	grad.gradJ = -lambda*(g.J .> 0) + lambda*(g.J.<0)
+	eps = lambda
+	for j in 1:g.L
+		for i in 1:g.L
+			if i!=j
+				for b in 1:g.q
+					for a in 1:g.q
+						if g.J[(i-1)*g.q + a, (j-1)*g.q + b]>eps
+							grad.gradJ[(i-1)*g.q + a, (j-1)*g.q + b] =  -min(lambda, g.J[(i-1)*g.q + a, (j-1)*g.q + b])
+						elseif g.J[(i-1)*g.q + a, (j-1)*g.q + b]<eps
+							grad.gradJ[(i-1)*g.q + a, (j-1)*g.q + b] =  min(lambda, -g.J[(i-1)*g.q + a, (j-1)*g.q + b])
+						else
+							if abs(cgrad[(i-1)*g.q + a, (j-1)*g.q + b]) < eps
+								cgrad[(i-1)*g.q + a, (j-1)*g.q + b] = 0
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+
+	# grad.gradJ = -lambda*(g.J .> 0) + lambda*(g.J.<0)
 	# grad.gradh = -lambda*(g.h .> 0) + lambda*(g.h.<0)
-	# display(grad.gradJ)
 
 	return grad
 end

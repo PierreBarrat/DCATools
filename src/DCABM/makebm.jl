@@ -114,7 +114,7 @@ function bmstep!(g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, md::Mu
 
 	# If l1 regularization exists, add it to gradient
 	if meta.l1 != 0
-		gradtot += computel1(g, meta.l1)
+		gradtot += computel1!(g, gradtot, meta.l1)
 	end
 
 	# If we're also fitting mutants, add it to gradient
