@@ -36,6 +36,9 @@ function computegradient(sample::Array{Int64,2}, f1::Array{Float64,1}, f2::Array
 	γ = p2 - p1*p1'
 	δ = (p1-f1)*(p1-f1)'
 	grad.gradJ = c - γ - δ
+	for i in 1:L
+		grad.gradJ[(i-1)*q .+ (1:q), (i-1)*q .+ (1:q)] .= 0
+	end
 	grad.gradh = f1 - p1 
 
 	return grad, p1, p2
