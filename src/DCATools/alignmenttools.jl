@@ -1,4 +1,4 @@
-export computefreqs, computeweights
+export computefreqs, computeweights, pdist
 
 """
     computefreqs(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
@@ -162,3 +162,20 @@ function computeweights(Y::Array{Int64,2}, theta::Float64)
     end
     return 1 ./weights
 end
+
+"""
+    pdist(Y::Array{Int64,2})
+
+Pairwise hamming distance between sequences in lines of `Y`. 
+"""
+function pdist(Y::Array{Int64,2})
+    M = size(Y,1)
+    Yt = Y'
+    out = zeros(Int64, M, M)
+    for m1 in 1:M
+        for m2 in (m1+1):M
+            out[m2,m1] = hamming(Yt[:,m1], Yt[:,m2])
+        end
+    end
+    return out + out'
+end 

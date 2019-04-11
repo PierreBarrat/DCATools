@@ -1,4 +1,4 @@
-export fitquality, threepointscor, corr3p, projseq, linreg
+export fitquality, threepointscor, corr3p, projseq, linreg, hamming
 
 """
     fitquality(f2_1::Array{Float64,2}, f1_1::Array{Float64,1}, f2_2::Array{Float64,2}, f1_2::Array{Float64,1}, q::Int64; withdiag=false)
@@ -40,7 +40,7 @@ end
 """
     linreg(x,y)
 
-Simple linear regression. No longer available in Base sadly. 
+Simple linear regression in one dimension. No longer available in Base sadly. 
 """
 function linreg(x::Array{Float64,1},y::Array{Float64,1})
     return reverse([x ones(Float64, length(x))]\y)
@@ -231,4 +231,11 @@ function projseq(seq::Array{Int64,2}, pc::Array{Float64,2}, q)
     end
 
     return proj
+end
+
+"""
+    hamming(x,y)
+"""
+function hamming(x,y)
+    return sum(x .!= y)
 end

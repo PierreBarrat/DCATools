@@ -38,8 +38,9 @@ function readparammat(infile::String, q::Int64)
     f = open(infile)
     try 
     	J::Array{Float64,2} = readdlm(f,Float64)
-    catch error
-    	error("inputoutput.jl - readparammat: error when attempting to dlmread file $infile\n")
+    catch err
+    	println("inputoutput.jl - readparammat: error when attempting to dlmread file $infile\n")
+    	error("$err")
     end
     close(f)
     h::Array{Float64,1} = J[end,:]
