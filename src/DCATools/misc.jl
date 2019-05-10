@@ -72,13 +72,13 @@ Base routine. Compute three body correlations between columns of alignment `Y`, 
 function threepointscor(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64, threshold::Float64)
     (M,L) = size(Y)
     Meff = sum(w)
-    @time (f1,f2) = computefreqs(Y,w,q)
+    (f1,f2) = computefreqs(Y,w,q)
 
     c3p = Array{corr3p,1}(undef, 0)
     ff3 = zeros(Float64, q*q*q) # Will contain 3p frequencies for triplet (i,j,k)
 
-    @time for i in 1:L
-    print("$i ...")
+    for i in 1:L
+    print("$i/$L ...    \r")
         for j in (i+1):L
              for k in (j+1):L
                 # Computing 3p freqs
@@ -151,6 +151,7 @@ function threepointscor(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64, triple
         ff3 -= f2[(i-1)*q+a, (j-1)*q+b]*f1[(k-1)*q+c] - f2[(i-1)*q+a, (k-1)*q+c]*f1[(j-1)*q+b] - f2[(j-1)*q+b, (k-1)*q+c]*f1[(i-1)*q+a] + 2*f1[(i-1)*q+a]*f1[(j-1)*q+b]*f1[(k-1)*q+c]
         push!(c3p,corr3p(i,j,k,a,b,c,ff3))
     end
+    println()
     return c3p
 end
 
