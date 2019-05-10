@@ -1,4 +1,4 @@
-export computefreqs, computeweights
+export computefreqs, computeweights, pdist
 
 """
     computefreqs(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
@@ -39,7 +39,7 @@ end
 
 
 """
-    computefreqs(Y::Array{Int64,2}; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="")
+    computefreqs(Y::Array{Int64,2}; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", pc=0.)
 
 Compute pairwise frequencies for an array input. `Y` is an array of `Int64`. Return frequencies `f1` and `f2` and weights.
 
@@ -48,8 +48,9 @@ Keywords:
 - `weights`: default `[]`. If it is a `String`, phylogenetic weights are read from the corresponding file. If it is an `Array{Float64,1}`, they are used directly.
 - `computew`: default `false`. If true, phylogenetic weights are computed, calling the appropriate `computeweights`. `weights` is then ignored. 
 - `saveweights` and `theta`: see `computeweights`. 
+- `pc`: default 0. Pseudocount ratio. 
 """
-function computefreqs(Y::Array{Int64,2}; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="")
+function computefreqs(Y::Array{Int64,2}; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", pc=0.)
     w = Array{Float64,1}(undef, 0)
     if computew
         # compute weights
@@ -78,11 +79,21 @@ function computefreqs(Y::Array{Int64,2}; q = findmax(Y)[1], computew=false, weig
     end
 
     (f1, f2) = computefreqs(Y,w,q)
+    if pc != 0.
+        f1 = (1-pc)*f1 .+ pc/q
+        f2 = (1-pc)*f2 .+ pc/q/q
+        for i in 1:size(Y,2)
+            f2[(i-1)*q .+ (1:q), (i-1)*q .+ (1:q)] .= 0
+            for a in 1:q
+                f2[(i-1)*q+a, (i-1)*q+a] = f1[(i-1)*q+a]*(1-f1[(i-1)*q+a])
+            end
+        end
+    end
     return (f1,f2,w)
 end
 
 """
-    computefreqs(msa::String; q = 0, computew=false, weights=[], theta=0.2, saveweights="", header=false, format=1)
+    computefreqs(msa::String; q = 0, computew=false, weights=[], theta=0.2, saveweights="", header=false, format=1, pc=0.)
 
 Compute pairwise frequencies for a file input. `msa` is a file containing the alignment in numerical format. Return frequencies `f1` and `f2` and weights.
 
@@ -92,13 +103,14 @@ Keywords:
 - `computew`: default `false`. If true, phylogenetic weights are computed, calling the appropriate `computeweights`. `weights` is then ignored. 
 - `saveweights` and `theta`: see `computeweights`. 
 - `header` and `format`: see `readmsanum`.
+- `pc`: default 0. Pseudocount ratio.
 """
-function computefreqs(msa::String; q = 0, computew=false, weights=[], theta=0.2, saveweights="", header=false, format=1)
+function computefreqs(msa::String; q = 0, computew=false, weights=[], theta=0.2, saveweights="", header=false, format=1, pc=0.)
     Y = readmsanum(msa, header=header, format=format)
     if q==0
         q = findmax(Y)[1]
     end
-    return computefreqs(Y, q=q, computew=computew, weights=weights, theta=theta, saveweights=saveweights)
+    return computefreqs(Y, q=q, computew=computew, weights=weights, theta=theta, saveweights=saveweights, pc=pc)
 end
 
 
@@ -162,3 +174,20 @@ function computeweights(Y::Array{Int64,2}, theta::Float64)
     end
     return 1 ./weights
 end
+
+"""
+    pdist(Y::Array{Int64,2})
+
+Pairwise hamming distance between sequences in lines of `Y`. 
+"""
+function pdist(Y::Array{Int64,2})
+    M = size(Y,1)
+    Yt = Y'
+    out = zeros(Int64, M, M)
+    for m1 in 1:M
+        for m2 in (m1+1):M
+            out[m2,m1] = hamming(Yt[:,m1], Yt[:,m2])
+        end
+    end
+    return out + out'
+end 

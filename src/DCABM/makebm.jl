@@ -4,7 +4,7 @@ export bmstep!, bmlearn
 """
 function writelog(logname::String, bmlog::BMlog)
 	ff = open(logname,"a")
-	outstring = @sprintf("%d    %d    %.4f    %.4f    %.4f    %.4f    %.4f    %.4f    %.4f    %.4f\n",bmlog.samplesize,bmlog.tau, bmlog.gradnorm, bmlog.gradnormh, bmlog.gradnormJ, bmlog.gradconsth, bmlog.gradconstJ, bmlog.corcor, bmlog.slopecor, bmlog.cormag)
+	outstring = @sprintf("%d    %d    %.4f    %.4f    %.4f    %.4f    %.4f    %.4f    %.4f    %.4f    %.4f\n",bmlog.samplesize,bmlog.tau, bmlog.gradnorm, bmlog.gradnormh, bmlog.gradnormJ, bmlog.gradconsth, bmlog.gradconstJ, bmlog.corcor, bmlog.slopecor, bmlog.cormag, bmlog.cormutants)
 	write(ff, outstring)
 	# write(ff, "$(bmlog.samplesize)\t$(bmlog.tau)\t$(bmlog.gradnorm)\t$(bmlog.gradnormh)\t$(bmlog.gradnormJ)\t$(bmlog.gradconsth)\t$(bmlog.gradconstJ)")
 	# write(ff, "\t$(bmlog.corcor)\t$(bmlog.slopecor)\t$(bmlog.cormag)")
@@ -16,7 +16,7 @@ end
 function writelog(logname::String)
 	ff = open(logname,"w")
 	write(ff, "M    tau    gradient_norm    gradnormh    gradnormJ    gradient_consistency_h    gradient_consistency_J")
-	write(ff, "    corcor    slopecor    cormag")
+	write(ff, "    corcor    slopecor    cormag    cormutants")
 	write(ff, "\n")
 	close(ff)
 end
@@ -34,16 +34,22 @@ Some useful ones
 - `logfile`: name of logfile. 
 - `ginit`: `DCAgraph` object. Initial values of parameters. 
 - `gradinit`: `DCAgrad` object. Initial value of gradient. Useful to restart a learning. Can also be used to train the model only on a subset of parameters by setting initial `stepJ` and `steph` to non zero values for those. 
+
+# Warning
+This is the reparametrized version of the BM. It is not yet compatible with the integrative scheme. For this reason, the `MutData` argument should be left empty. 
 """
 function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64 ; 
 	ginit::DCAgraph = DCAgraph(L,q), gradinit=DCAgrad(L, q), 
 	l2 = 0.01, l1 = 0.,
 	samplesize = 1000, 
-	basestepJ = 0.05, basesteph = 0.05,  stepJmax = 1., stephmax = 1.,
+	basestepJ = 0.05, basesteph = 0.05,  stepJmax = 0.5, stephmax = 0.5,
 	aJup = 1.2, aJdown = 0.5, ahup = 1.2, ahdown = 0.5, 
-	adaptMup = 1.2, Mmax = 200000, 
+	adaptMup = 1.05, Mmax = 100000, 
+	update_tau = 10,
 	saveparam = 10, savefolder="",
+	mutants::MutData = MutData(), integrative_lambda=0, integrative_M = 1, 
 	nit = 50, 
+	nprocs = 1,
 	logfile="log.txt")
 	
 	# Initializing save directory
@@ -53,7 +59,7 @@ function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64 
 	end
 
 	# Initializing meta data and log
-	meta = BMmeta(l2, l1, basestepJ, basesteph, stepJmax, stephmax, aJup, aJdown, ahup, ahdown, adaptMup, Mmax, saveparam)
+	meta = BMmeta(l2, l1, basestepJ, basesteph, stepJmax, stephmax, aJup, aJdown, ahup, ahdown, adaptMup, Mmax, integrative_lambda, integrative_M, saveparam, nprocs)
 	bmlog = BMlog()
 	bmlog.samplesize = samplesize
 
@@ -62,11 +68,17 @@ function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64 
 	cgrad = deepcopy(gradinit)
 	sample = bminit!(cgrad, g, f1, f2, meta, bmlog)
 
+	# Copying mutants
+	md = deepcopy(mutants)
+
 	# Header for logfile
 	writelog(logfile)
 
 	for it in 1:nit
-		cgrad = bmstep!(g, f1, f2, cgrad, meta, bmlog)
+		if mod(it,update_tau) == 1
+			bmlog.tau = 0
+		end
+		cgrad = bmstep!(g, f1, f2, md, cgrad, meta, bmlog)
 		println(" --- It. $it out of $nit ---")
 		println("Norm of gradient: $(bmlog.gradnorm)")
 		writelog(logfile, bmlog)
@@ -84,33 +96,51 @@ end
 """
 	bmsample(g::DCAgraph, M::Int64)
 """
-function bmsample(g::DCAgraph, M::Int64)
-	tau = 3*estimatetau(g, mode="fast")
-	return doMCMC(g, M, tau, T = 20*tau), tau
+function bmsample(g::DCAgraph, M::Int64, nprocs, tau::Int64)
+	# tau == 0 is a special value. In this case, update the value of tau
+	if tau == 0
+		tau = 3*estimatetau(g, mode="fast", nprocs=nprocs)
+	end
+	return doMCMC(g, M, tau, T = 20*tau, nprocs = nprocs), tau
 end
 
 """
-	bmstep!(g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, prevgrad::DCAgrad, meta::BMmeta, bmlog::BMlog)
+	bmstep!(g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, md::MutData, prevgrad::DCAgrad, meta::BMmeta, bmlog::BMlog)
 
-Compute gradient for current graph `g` and updates it. Target frequencies are `f1` and `f2`. Return computed gradient. 
+Compute gradient for current graph `g` and updates it. Target frequencies are `f1` and `f2`. Local mutational data is `md`. Return computed gradient. 
 """
-function bmstep!(g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, prevgrad::DCAgrad, meta::BMmeta, bmlog::BMlog)
+function bmstep!(g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, md::MutData, prevgrad::DCAgrad, meta::BMmeta, bmlog::BMlog)
 
 	# Compute new sample
-	sample, tau = bmsample(g, bmlog.samplesize)
+	sample, tau = bmsample(g, bmlog.samplesize, meta.nprocs, bmlog.tau)
 	bmlog.tau = tau
 
-	# Compute gradient and regularization effect
+
+	# Compute gradient from frequency difference and l2 regularization
 	freqgrad, p1, p2 = computegradient(sample, f1, f2, g.q)
-	reg = computel2(g, meta.l2)
-	regl1 = computel1(g, meta.l1)
-	gradtot = freqgrad + reg + regl1
+	reg = computel2(g, meta.l2, f1)
+	gradtot = freqgrad + reg
+
+	# If l1 regularization exists, add it to gradient
+	if meta.l1 != 0
+		gradtot += computel1!(g, gradtot, meta.l1)
+	end
+
+	# If we're also fitting mutants, add it to gradient
+	bmlog.cormutants = 0.
+	if !isempty(md.mutant)
+		computeenergies!(md, g)
+		mapping = mapenergies(md, g)
+		bmlog.cormutants = cor(map(x->x.fitness, md.mutant), map(x->mapping[x.E], md.mutant))
+		mutgrad = computegradient(md, mapping, meta)
+		gradtot += mutgrad
+	end
 
 	# Determine step size -- adaptive
 	computestepsize!(gradtot, prevgrad, meta)
 
 	# Update parameters
-	updateparameters!(g, gradtot)
+	updateparameters!(g, gradtot, f1)
 
 	# Updating M and computing gradient norm 
 	bmlog.gradnorm, bmlog.gradnormh, bmlog.gradnormJ = gradnorm(gradtot)
@@ -131,7 +161,7 @@ end
 """
 	bminit!(grad::DCAgrad, g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, meta::BMmeta)
 
-Initialize gradient and sample with null values. Step sizes for gradient are initialized using `meta`. If the gradient was a non-null one, *ie* if gradient values or stepsizes are different from 0, then the full gradient object remains untouched.
+Initialize gradient and sample with null values. Step sizes for gradient are initialized using `meta`. If the gradient was a non-null one, *ie* if gradient values or stepsizes are different from 0, then the full gradient object remains untouched. 
 """
 function bminit!(grad::DCAgrad, g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, meta::BMmeta, bmlog::BMlog)
 	sampleinit = zeros(Int64, bmlog.samplesize, g.L)
@@ -140,7 +170,9 @@ function bminit!(grad::DCAgrad, g::DCAgraph, f1::Array{Float64,1}, f2::Array{Flo
 		grad.stepJ .= meta.basestepJ
 		grad.steph .= meta.basesteph
 	end
-
+	for i in 1:g.L
+		grad.stepJ[(i-1)*g.q .+ (1:g.q), (i-1)*g.q .+ (1:g.q)] .= 0
+	end
 	return sampleinit
 end
 
@@ -162,7 +194,7 @@ end
 
 Update `M` based on gradient consistency. If cosine between the two gradient is smaller than `threshold`, `M` is increased. 
 """
-function updateM!(bmlog::BMlog, meta::BMmeta ; threshold = 0.4)
+function updateM!(bmlog::BMlog, meta::BMmeta ; threshold = 0.6)
 	if bmlog.gradconstJ < threshold
 		bmlog.samplesize = min(meta.Mmax, Int64(round(meta.adaptMup * bmlog.samplesize)))
 	end
