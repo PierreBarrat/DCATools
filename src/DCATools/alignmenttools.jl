@@ -211,5 +211,11 @@ function convert_fasta(infasta::String, outfasta::String)
         end
         out[n] = out[n][1:end-1]
     end
-    writefasta(outfasta, out)
+    out = map(x->parse.(Int64,x), split.(collect(values(out)), " "))
+    out_ = zeros(Int64, length(fasta), length(out[1]))
+    for (i,s) in enumerate(out)
+        out_[i,:] .= s
+    end
+    # writefasta(outfasta, out)
+    writedlm(outfasta, out_, ' ')
 end
