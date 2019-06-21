@@ -1,4 +1,4 @@
-export computefreqs, computeweights, pdist
+export computefreqs, computeweights, pdist, convert_fasta
 
 """
     computefreqs(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
@@ -191,3 +191,25 @@ function pdist(Y::Array{Int64,2})
     end
     return out + out'
 end 
+
+
+"""
+    convert_fasta(infasta::String, outfasta::String)
+
+Convert amino-acid characters in `infasta` to numbers, using the mapping `-ACDEFGHIKLMNPQRSTVWY`. 
+Write result to `outfasta`.  
+"""
+function convert_fasta(infasta::String, outfasta::String)
+    mapping = "-ACDEFGHIKLMNPQRSTVWY"
+    mapdict = Dict(x=>findfirst(a->a==x, mapping) for x in mapping)
+    fasta = readfasta(infasta)
+    out = Dict()
+    for (i,(n,s)) in enumerate(fasta)
+        out[n] = ""
+        for a in s
+            out[n] *= "$(get(mapdict, a, "-")) "
+        end
+        out[n] = out[n][1:end-1]
+    end
+    writefasta(outfasta, out)
+end

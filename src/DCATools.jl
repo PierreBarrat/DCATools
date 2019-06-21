@@ -3,6 +3,7 @@ module DCATools
 using DelimitedFiles
 using Statistics
 using LinearAlgebra
+using FastaIO
 
 """
 	DCAgraph
