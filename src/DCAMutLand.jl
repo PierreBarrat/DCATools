@@ -113,7 +113,7 @@ function readmutdata(infile::String ; mapsingle = false)
 		# Data # 
 		else 
 			cmut = Mutant()
-			pl = Meta.parse.(split(l, " "))
+			pl = Meta.parse.(split(l))
 			N = Int64(pl[1])
 			for n in 1:N
 				push!(cmut.smut, SingleMut(Int64(pl[2*n]), Int64(pl[2*n+1]), NaN, NaN)) 

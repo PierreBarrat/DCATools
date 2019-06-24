@@ -113,8 +113,8 @@ Keywords:
 - `weights`: see `computefreqs`
 - 
 """
-function inferprofile(msa::Array{Int64,2}, q::Int64; pc = 1e-5, weights="", outfile::String="")
-    f1 = computefreqs(msa, q=q, weights=weights)
+function inferprofile(msa::Array{Int64,2}; q=findmax(msa)[1], pc = 1e-5, weights="", save::String="")
+    f1 = computefreqs(msa, q=q, weights=weights)[1]
     return inferprofile(f1, q, pc=pc, save=save)
 end
 
