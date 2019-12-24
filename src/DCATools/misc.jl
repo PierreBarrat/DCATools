@@ -1,4 +1,4 @@
-export fitquality, threepointscor, corr3p, projseq, linreg, hamming
+export fitquality, threepointscor, corr3p, projseq, linreg
 
 """
     fitquality(f2_1::Array{Float64,2}, f1_1::Array{Float64,1}, f2_2::Array{Float64,2}, f1_2::Array{Float64,1}, q::Int64; withdiag=false)
@@ -40,12 +40,11 @@ end
 """
     linreg(x,y)
 
-Simple linear regression in one dimension. No longer available in Base sadly. 
+Simple linear regression. No longer available in Base sadly. 
 """
 function linreg(x::Array{Float64,1},y::Array{Float64,1})
     return reverse([x ones(Float64, length(x))]\y)
 end
-
 
 
 ## Three points correlation
@@ -72,12 +71,12 @@ Base routine. Compute three body correlations between columns of alignment `Y`, 
 function threepointscor(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64, threshold::Float64)
     (M,L) = size(Y)
     Meff = sum(w)
-    (f1,f2) = computefreqs(Y,w,q)
+    @time (f1,f2) = computefreqs(Y,w,q)
 
     c3p = Array{corr3p,1}(undef, 0)
     ff3 = zeros(Float64, q*q*q) # Will contain 3p frequencies for triplet (i,j,k)
 
-    for i in 1:L
+    @time for i in 1:L
     print("$i/$L ...    \r")
         for j in (i+1):L
              for k in (j+1):L
@@ -151,7 +150,6 @@ function threepointscor(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64, triple
         ff3 -= f2[(i-1)*q+a, (j-1)*q+b]*f1[(k-1)*q+c] - f2[(i-1)*q+a, (k-1)*q+c]*f1[(j-1)*q+b] - f2[(j-1)*q+b, (k-1)*q+c]*f1[(i-1)*q+a] + 2*f1[(i-1)*q+a]*f1[(j-1)*q+b]*f1[(k-1)*q+c]
         push!(c3p,corr3p(i,j,k,a,b,c,ff3))
     end
-    println()
     return c3p
 end
 
@@ -235,8 +233,25 @@ function projseq(seq::Array{Int64,2}, pc::Array{Float64,2}, q)
 end
 
 """
-    hamming(x,y)
+    aa2bin(x::Array{Int64,1} ;q=21)
+    aa2bin(x::Array{Int64,2} ;q=21)
 """
+function aa2bin(x::Array{Int64,1} ;q=21)
+    out = zeros(Int64, length(x)*q)
+    for (i,a) in enumerate(x)
+        out[(i-1)*q+a]=1
+    end
+    return out
+end
+
+function aa2bin(x::Array{Int64,2} ;q=21)
+    out = zeros(Int64, size(x,1), size(x,2)*q)
+    for m in 1:size(x,1)
+        out[m,:] .= aa2bin(x[m,:], q=q)
+    end
+    return out
+end
+
 function hamming(x,y)
     return sum(x .!= y)
 end
