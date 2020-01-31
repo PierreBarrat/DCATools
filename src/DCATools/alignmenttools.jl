@@ -85,7 +85,7 @@ function computefreqs(Y::Array{Int64,2}; q = findmax(Y)[1], computew=false, weig
         for i in 1:size(Y,2)
             f2[(i-1)*q .+ (1:q), (i-1)*q .+ (1:q)] .= 0
             for a in 1:q
-                f2[(i-1)*q+a, (i-1)*q+a] = f1[(i-1)*q+a]*(1-f1[(i-1)*q+a])
+                f2[(i-1)*q+a, (i-1)*q+a] = f1[(i-1)*q+a]
             end
         end
     end

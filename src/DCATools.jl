@@ -44,6 +44,7 @@ include("DCATools/alignmenttools.jl")
 include("DCATools/modeltools.jl")
 include("DCATools/contactprediction.jl")
 include("DCATools/misc.jl")
+include("DCATools/MF.jl")
 
 export DCAgraph, *
 
