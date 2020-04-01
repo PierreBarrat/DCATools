@@ -219,3 +219,82 @@ function convert_fasta(infasta::String, outfasta::String)
     # writefasta(outfasta, out)
     writedlm(outfasta, out_, ' ')
 end
+
+# """
+# """
+# function PCA(f1::Array{Float64,1}, f2::Array{Float64,2})
+# end
+
+"""
+    compute_profile(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
+
+Base routine for computing profile in sample `Y`. `w` is an array containing the weights. 
+"""
+function compute_profile(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
+    if typeof(w)==Array{Float64,2}
+        @warn("`w` is of dimension 2. Applying `vec`.")
+        w = vec(w)
+    end
+
+    (M,L) = size(Y)
+    f1 = zeros(Float64,L*q) 
+
+    if size(w)[1]!=M
+        error("Incorrect number of weights\n")
+    end 
+
+    Meff = sum(w)
+    for m in 1:M
+        for j in 1:L
+            f1[(j-1)*q+Y[m,j]] += w[m]
+        end
+    end
+    f1 = f1./Meff
+    return f1
+end
+"""
+    compute_profile(Y::Array{Int64,2}; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", pc=0.)
+
+Compute single site frequencies for an array input. `Y` is an array of `Int64`. Return frequencies `f1` and weights.
+
+Keywords: 
+- `q`: default `findmax(Y)[1]`
+- `weights`: default `[]`. If it is a `String`, phylogenetic weights are read from the corresponding file. If it is an `Array{Float64,1}`, they are used directly.
+- `computew`: default `false`. If true, phylogenetic weights are computed, calling the appropriate `computeweights`. `weights` is then ignored. 
+- `saveweights` and `theta`: see `computeweights`. 
+- `pc`: default 0. Pseudocount ratio. 
+"""
+function compute_profile(Y::Array{Int64,2}; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", pc=0.)
+    w = Array{Float64,1}(undef, 0)
+    if computew
+        # compute weights
+        w = computeweights(Y, theta=theta, saveweights=saveweights)
+        if weights!=[]
+            # computew cancels weights
+            @warn("Both keywords `weights` and `computew` were declared. `weights` ignored.\n")
+        end
+    else
+        if weights == []
+            # no weights used
+            w = ones(Float64, size(Y,1))
+        elseif typeof(weights) == String
+            # read them from file
+            w = vec(readdlm(weights, Float64))
+        elseif typeof(weights) == Array{Float64,1}
+            # read them from the array
+            w = weights
+        else
+            # not recognized, no weights used
+            warn("Unrecognized format for keyword `weights`.")
+        end
+    end
+    if size(w,1)!=size(Y,1)
+        error("Incorrect size for `weights`. Should be equal to the number of sequences in `Y`.")
+    end
+
+    f1 = compute_profile(Y,w,q)
+    if pc != 0.
+        f1 = (1-pc)*f1 .+ pc/q
+    end
+    return (f1,w)
+end
