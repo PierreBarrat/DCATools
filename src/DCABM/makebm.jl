@@ -34,9 +34,9 @@ Some useful ones
 - `logfile`: name of logfile. 
 - `ginit`: `DCAgraph` object. Initial values of parameters. 
 - `gradinit`: `DCAgrad` object. Initial value of gradient. Useful to restart a learning. Can also be used to train the model only on a subset of parameters by setting initial `stepJ` and `steph` to non zero values for those. 
+- `samplesize`: initial sample size. 
+- `Mmax`: maximal sample size
 
-# Warning
-This is the reparametrized version of the BM. It is not yet compatible with the integrative scheme. For this reason, the `MutData` argument should be left empty. 
 """
 function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64 ; 
 	ginit::DCAgraph = DCAgraph(L,q), gradinit=DCAgrad(L, q), 
