@@ -199,27 +199,23 @@ end
 Convert amino-acid characters in `infasta` to numbers, using the mapping `-ACDEFGHIKLMNPQRSTVWY`. 
 Write result to `outfasta`.  
 """
-function convert_fasta(infasta::String, outfasta::String)
-    mapping = "-ACDEFGHIKLMNPQRSTVWY"
-    mapdict = Dict(x=>findfirst(a->a==x, mapping) for x in mapping)
+function convert_fasta(infasta::String, outfasta::String, mapping = "-ACDEFGHIKLMNPQRSTVWY")
     fasta = readfasta(infasta)
-    out = Dict()
+    out = Array{Int64,2}(undef, length(fasta), length(fasta[1][2]))
     for (i,(n,s)) in enumerate(fasta)
-        out[n] = ""
-        for a in s
-            out[n] *= "$(get(mapdict, a, "-")) "
-        end
-        out[n] = out[n][1:end-1]
+        out[i,:] .= convert_seq(s, mapping)
     end
-    out = map(x->parse.(Int64,x), split.(collect(values(out)), " "))
-    out_ = zeros(Int64, length(fasta), length(out[1]))
-    for (i,s) in enumerate(out)
-        out_[i,:] .= s
-    end
-    # writefasta(outfasta, out)
-    writedlm(outfasta, out_, ' ')
+    writedlm(outfasta, out, ' ')
 end
 
+function convert_seq(s::String, mapping = "-ACDEFGHIKLMNPQRSTVWY")
+    mapdict = Dict(x=>findfirst(a->a==x, mapping) for x in mapping)
+    σ = Array{Int64,1}(undef, length(s))
+    for (i,a) in enumerate(s)
+        σ[i] = get(mapdict, a, 1)
+    end
+    return σ
+end
 # """
 # """
 # function PCA(f1::Array{Float64,1}, f2::Array{Float64,2})

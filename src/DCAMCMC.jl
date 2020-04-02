@@ -42,7 +42,7 @@ end
 """
 	doMCMC(graph::DCAgraph, M::Int64, tau ; outfile="", T= 100000, beta = 1.0, verbose = false,conf_init=rand(1:graph.q, graph.L), nprocs = 1)
 
-Sample `M` configurations from probability distribution defined by `graph`. Number of MCMC steps between configurations is `tau`. 
+Sample `M` configurations from probability distribution defined by `graph`. Number of MCMC sweeps between configurations is `tau`. 
 
 Keyword parameters: 
 - outfile: Default "". Location to save sample. 
@@ -50,6 +50,9 @@ Keyword parameters:
 - beta: Default 1.0. Inverse temperature
 - conf_init: Default random. Initial configuration. 
 - nprocs: Default 1. Number of parallel MCMC chains.
+
+## Note
+Single swaps can be made by choosing `τ=1/L`
 """
 function doMCMC(graph::DCAgraph, M::Int64, tau ; outfile="", T= 50*tau, beta = 1.0, verbose = false,conf_init=rand(1:graph.q, graph.L), nprocs = 1)
 
@@ -146,7 +149,10 @@ end
 """
 	samplefromgraph!(g::DCAgraph, conf_init::Array{Int64,1}, conf_end::Array{Int64,1}, tau::Float64)
 
-Sample for `tau*L` iterations from probability defined by `g`, starting with configuration `conf_init` and storing final configuration in `conf_end`. 
+Sample for `round(tau*L)` swaps from probability defined by `g`, starting with configuration `conf_init` and storing final configuration in `conf_end`. 
+
+## Note
+This version is used if `τ` is not an integer. It allows doing single swaps for `τ=1/L`  
 """
 function samplefromgraph!(g::DCAgraph, conf_init::Array{Int64,1}, conf_end::Array{Int64,1}, tau::Float64)
 	rng = MersenneTwister(rand(1:100000))
