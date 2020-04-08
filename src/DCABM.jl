@@ -25,7 +25,7 @@ function DCAgrad(L::Int64, q::Int64)
     return DCAgrad(zeros(Float64, L*q,L*q), zeros(Float64,L*q), zeros(Float64, L*q,L*q), zeros(Float64,L*q), L, q)
 end
 
-import Base: +
+import Base: +, *
 
 
 """
@@ -35,6 +35,19 @@ Add two gradients. Step size is the one of the first argument.
 """
 function +(A::DCAgrad, B::DCAgrad)
     return DCAgrad(A.gradJ + B.gradJ, A.gradh + B.gradh, A.stepJ, A.steph, A.L, A.q)
+end
+
+"""
+    *(λ::Float64, g::DCAgrad)
+"""
+function *(λ::Float64, g::DCAgrad)
+    return DCAgrad(λ * g.gradJ, λ*g.gradh, g.stepJ, g.steph, g.L, g.q)
+end
+"""
+    *(g::DCAgrad, λ::Float64)
+"""
+function *(g::DCAgrad, λ::Float64)
+    return DCAgrad(λ * g.gradJ, λ*g.gradh, g.stepJ, g.steph, g.L, g.q)
 end
 
 """

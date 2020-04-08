@@ -80,11 +80,12 @@ Map energies values of mutants to fitness values. Details of the mapping can be 
 Output `mapping` is a dictionary such that `mapping[E] = fitness`. 
 """
 function mapenergies(md::MutData, g::DCAgraph)
-	computeenergies!(md, g)
+	md_ = deepcopy(md)
+	computeenergies!(md_, g)
 	mapping = Dict{Float64, Float64}()
 	fitlist = Array{Float64,1}(undef, 0)
 	Elist = Array{Float64,1}(undef, 0)
-	for m in md.mutant
+	for m in md_.mutant
 		push!(fitlist, m.fitness)
 		push!(Elist, m.E)
 	end

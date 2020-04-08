@@ -8,11 +8,15 @@ Implemented gauges:
 1. 0 sum: "0sum"
 2. Lattice gas: "LG", "lg", "latticegas". 
 """
-function switchgauge!(g::DCAgraph ; gauge="0sum", col=g.q)
+function switchgauge!(g::DCAgraph; gauge="0sum", col=g.q, wt=Array{Int64,1}(undef,0))
     if gauge=="0sum"
         g.J,g.h = switchgauge0sum(g.J,g.h,g.L,g.q)
     elseif gauge=="LG" || gauge=="lg" ||  gauge=="latticegas"
         g.J,g.h = switchgaugeLG(g.J,g.h,g.q,col=col)
+    elseif gauge=="wt"
+        g.J, g.h = switchgaugeWT(g.J, g.h, wt, g.q)
+    elseif gauge=="ML" || gauge=="ml"
+        g.J, g.h = switchgaugeML(g.J, g.h, g.L, g.q)
     else
         error("modeltools.jl - switchgauge: unrecognized `gauge` keyword.")
     end
@@ -69,6 +73,43 @@ function switchgaugeLG(J::Array{Float64,2}, h::Array{Float64,1}, q::Int64 ; col=
     end
 
     return (Jo,ho)
+end
+
+"""
+    switchgaugeWT(J::Array{Float64,2}, h::Array{Float64,1}, wt::Array{Int64,1})
+"""
+function switchgaugeWT(J::Array{Float64,2}, h::Array{Float64,1}, wt::Array{Int64,1}, q::Int64)
+    L = Int64(size(J,1)/q)
+    ho = zeros(Float64, L*q)
+    Jo = zeros(Float64, L*q, L*q)
+    t = zeros(Float64,q,q)
+
+    ho .= h
+    for i in 1:L
+        for j in 1:L
+            t = J[(i-1)*q .+ (1:q),(j-1)*q .+ (1:q)]
+            Jo[(i-1)*q .+ (1:q),(j-1)*q .+ (1:q)] = t - repeat(t[:,wt[j]],1,q) - repeat(t[[wt[i]],:],q,1) + repeat([t[wt[i],wt[j]]],q,q)
+            ho[(i-1)*q .+ (1:q)] +=  vec(t[:,wt[j]]) - vec(repeat([t[wt[i],wt[j]]],1,q))
+        end
+        ho[(i-1)*q .+ (1:q)] -= vec(repeat([h[(i-1)*q+wt[i]]],1,q))
+    end
+
+    return (Jo,ho)    
+end
+
+"""
+"""
+function switchgaugeML(J, h, L, q)
+    Jo, ho = switchgauge0sum(J,h,L,q)
+    α = 1. /(q + L - 1)
+    for i in 1:L
+        for j in (i+1):L
+            Jo[(i-1)*q .+ (1:q), (j-1)*q .+ (1:q)] += α*repeat(ho[(i-1)*q .+ (1:q)], 1, 21) + α*repeat(ho[(j-1)*q .+ (1:q)]', 21, 1)
+            Jo[(j-1)*q .+ (1:q), (i-1)*q .+ (1:q)] .= Jo[(i-1)*q .+ (1:q), (j-1)*q .+ (1:q)]'
+        end
+        ho[(i-1)*q .+ (1:q)] *= α*q 
+    end
+    return Jo, ho
 end
 
 

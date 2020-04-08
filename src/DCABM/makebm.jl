@@ -33,10 +33,7 @@ Some useful ones
 - `saveparam`: number of iterations after which parameters are saved.  
 - `logfile`: name of logfile. 
 - `ginit`: `DCAgraph` object. Initial values of parameters. 
-- `gradinit`: `DCAgrad` object. Initial value of gradient. Useful to restart a learning. Can also be used to train the model only on a subset of parameters by setting initial `stepJ` and `steph` to non zero values for those. 
-- `samplesize`: initial sample size. 
-- `Mmax`: maximal sample size
-
+- `gradinit`: `DCAgrad` object. Initial value of gradient. Useful to restart a learning. Can also be used to train the model only on a subset of parameters by setting initial `stepJ` and `steph` to non zero values for those only. 
 """
 function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64 ; 
 	ginit::DCAgraph = DCAgraph(L,q), gradinit=DCAgrad(L, q), 
@@ -70,6 +67,9 @@ function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64 
 
 	# Copying mutants
 	md = deepcopy(mutants)
+	if !isempty(md.mutant)
+		switchgauge!(g, gauge="wt", wt = md.wt)
+	end
 
 	# Header for logfile
 	writelog(logfile)
@@ -97,7 +97,6 @@ end
 	bmsample(g::DCAgraph, M::Int64)
 """
 function bmsample(g::DCAgraph, M::Int64, nprocs, tau::Int64)
-	# tau == 0 is a special value. In this case, update the value of tau
 	if tau == 0
 		tau = 3*estimatetau(g, mode="fast", nprocs=nprocs)
 	end
@@ -118,7 +117,7 @@ function bmstep!(g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, md::Mu
 
 	# Compute gradient from frequency difference and l2 regularization
 	freqgrad, p1, p2 = computegradient(sample, f1, f2, g.q)
-	reg = computel2(g, meta.l2, f1)
+	reg = computel2(g, meta.l2)
 	gradtot = freqgrad + reg
 
 	# If l1 regularization exists, add it to gradient
@@ -134,13 +133,21 @@ function bmstep!(g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, md::Mu
 		bmlog.cormutants = cor(map(x->x.fitness, md.mutant), map(x->mapping[x.E], md.mutant))
 		mutgrad = computegradient(md, mapping, meta)
 		gradtot += mutgrad
+		# We want to stay in the wt gauge --> consider only gradient on non-wt positions
+		for i in 1:g.L
+			gradtot.gradh[(i-1)*g.q + md.wt[i]] = 0.
+			for j in (i+1):g.L
+				gradtot.gradJ[(i-1)*g.q + md.wt[i], (j-1)*g.q + md.wt[j]] = 0.
+				gradtot.gradJ[(j-1)*g.q + md.wt[j], (i-1)*g.q + md.wt[i]] = 0.
+			end
+		end
 	end
 
 	# Determine step size -- adaptive
 	computestepsize!(gradtot, prevgrad, meta)
 
 	# Update parameters
-	updateparameters!(g, gradtot, f1)
+	updateparameters!(g, gradtot)
 
 	# Updating M and computing gradient norm 
 	bmlog.gradnorm, bmlog.gradnormh, bmlog.gradnormJ = gradnorm(gradtot)
@@ -194,7 +201,7 @@ end
 
 Update `M` based on gradient consistency. If cosine between the two gradient is smaller than `threshold`, `M` is increased. 
 """
-function updateM!(bmlog::BMlog, meta::BMmeta ; threshold = 0.6)
+function updateM!(bmlog::BMlog, meta::BMmeta ; threshold = 0.4)
 	if bmlog.gradconstJ < threshold
 		bmlog.samplesize = min(meta.Mmax, Int64(round(meta.adaptMup * bmlog.samplesize)))
 	end
