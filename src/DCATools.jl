@@ -5,6 +5,8 @@ using Statistics
 using LinearAlgebra
 using FastaIO
 
+import Base: *, getindex
+
 """
 	DCAgraph
 """
@@ -18,7 +20,6 @@ function DCAgraph(L,q)
 	return DCAgraph(zeros(Float64, L*q, L*q), zeros(Float64, L*q), L, q)
 end
 
-import Base: *
 
 """
 	*(B, g::DCAgraph)
@@ -37,6 +38,13 @@ Multiply fields and couplings in `g` by scalar `B`. Useful to change temperature
 function *(g::DCAgraph, B)
     return DCAgraph(B*g.J, B*g.h, g.L, g.q)
 end
+
+"""
+"""
+getindex(g::DCAgraph, i, j, a, b) = g.J[(i .-1)*g.q .+ a, (j .-1)*g.q .+ b]
+getindex(g::DCAgraph, i, a) = g.h[(i .-1)*g.q .+ a]
+
+
 
 
 include("DCATools/inputoutput.jl")
