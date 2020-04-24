@@ -1,4 +1,4 @@
-module DCAMutLand
+module MutLand
 
 
 export SingleMut, Mutant, MutData, readmutdata, mapsinglemut!, findsinglemut, finddoublemut, computeepistasis!
@@ -254,6 +254,6 @@ function finddoublemut(md::MutData)
 end
 
 
-include("DCAMutLand/modeltools.jl")
+include("MutLand/modeltools.jl")
 
 end

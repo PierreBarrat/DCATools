@@ -1,8 +1,8 @@
-module DCABM
+module BM
 
 using DCATools
-using DCAMutLand
-using DCAMCMC
+using DCATools.MutLand
+using DCATools.MCMC
 using Printf
 using Statistics
 
@@ -113,7 +113,7 @@ function BMlog()
 end
 
 
-include("DCABM/computegradient.jl")
-include("DCABM/makebm.jl")
+include("BM/computegradient.jl")
+include("BM/makebm.jl")
 
 end

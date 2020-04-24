@@ -1,4 +1,4 @@
-module DCAMCMC
+module MCMC
 	
 using DCATools
 using DelimitedFiles
@@ -29,10 +29,12 @@ function doMCMC_par(graph::DCAgraph, M::Int64, tau, nprocs::Int64; T= 50*tau, be
 	end
 	Mloc = cld(M, nprocs)
 
+	println("proc $(myid())")
 	if verbose
 		println("Starting $nprocs MCMC chains of $Mloc samples each.")
 	end
 	sample = @distributed (vcat) for n in 1:nprocs
+		println("proc $(myid())")
 		# gt = deepcopy(graph); 
 		doMCMC(graph, Mloc, tau, T = T, beta = beta, outfile="", verbose = false, conf_init = rand(1:graph.q, graph.L), nprocs = 1)
 	end
@@ -55,7 +57,6 @@ Keyword parameters:
 Single swaps can be made by choosing `τ=1/L`
 """
 function doMCMC(graph::DCAgraph, M::Int64, tau ; outfile="", T= 50*tau, beta = 1.0, verbose = false,conf_init=rand(1:graph.q, graph.L), nprocs = 1)
-
 	# Handling parallel case first
 	if nprocs > 1
 		if verbose

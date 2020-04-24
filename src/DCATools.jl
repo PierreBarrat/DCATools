@@ -47,14 +47,22 @@ getindex(g::DCAgraph, i, a) = g.h[(i .-1)*g.q .+ a]
 
 
 
-include("DCATools/inputoutput.jl")
-include("DCATools/alignmenttools.jl")
-include("DCATools/modeltools.jl")
-include("DCATools/contactprediction.jl")
-include("DCATools/misc.jl")
-include("DCATools/MF.jl")
+include("inputoutput.jl")
+include("alignmenttools.jl")
+include("modeltools.jl")
+include("contactprediction.jl")
+include("misc.jl")
+include("MF.jl")
 
 export DCAgraph, *
+
+# Other sub-modules
+include("MCMC.jl")
+export doMCMC
+include("MutLand.jl")
+export SingleMut, Mutant, MutData, readmutdata, mapsinglemut!, findsinglemut, finddoublemut, computeepistasis!
+include("BM.jl")
+export bmlearn
 
 
 end
