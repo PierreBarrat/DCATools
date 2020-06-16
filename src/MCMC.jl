@@ -28,14 +28,10 @@ function doMCMC_par(graph::DCAgraph, M::Int64, tau, nprocs::Int64; T= 50*tau, be
 		@error "Number of workers ($(length(workers()))) smaller than `nprocs=$nprocs`."
 	end
 	Mloc = cld(M, nprocs)
-
-	println("proc $(myid())")
 	if verbose
 		println("Starting $nprocs MCMC chains of $Mloc samples each.")
 	end
 	sample = @distributed (vcat) for n in 1:nprocs
-		println("proc $(myid())")
-		# gt = deepcopy(graph); 
 		doMCMC(graph, Mloc, tau, T = T, beta = beta, outfile="", verbose = false, conf_init = rand(1:graph.q, graph.L), nprocs = 1)
 	end
 	return sample
