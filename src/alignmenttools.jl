@@ -69,9 +69,11 @@ function computefreqs(Y::Array{Int64,2}; q = findmax(Y)[1], computew=false, weig
         elseif typeof(weights) == Array{Float64,1}
             # read them from the array
             w = weights
+        elseif typeof(weights) == Array{Float64,2}
+            w = vec(weights)
         else
             # not recognized, no weights used
-            warn("alignmenttools.jl - computefreqs: unrecognized format for keyword `weights`.")
+            @warn "alignmenttools.jl - computefreqs: unrecognized format for keyword `weights`"
         end
     end
     if size(w,1)!=size(Y,1)
