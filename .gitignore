@@ -2,5 +2,6 @@
 testdata
 example/PF00096
 example/.*
+example/testingBM
 docs/build
 docs

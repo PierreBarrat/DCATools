@@ -5,7 +5,7 @@ using Statistics
 using LinearAlgebra
 using FastaIO
 
-import Base: *, getindex
+import Base: *, getindex, ==
 
 """
 	DCAgraph
@@ -44,6 +44,9 @@ end
 getindex(g::DCAgraph, i, j, a, b) = g.J[(i .-1)*g.q .+ a, (j .-1)*g.q .+ b]
 getindex(g::DCAgraph, i, a) = g.h[(i .-1)*g.q .+ a]
 
+function ==(g1::DCAgraph, g2::DCAgraph) 
+    g1.J == g2.J && g1.h == g2.h && g1.L == g2.L && g1.q == g2.q
+end
 
 
 

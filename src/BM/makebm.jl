@@ -1,5 +1,12 @@
 export bmstep!, bmlearn
 
+let verbose::Bool = false
+	global v() = verbose
+	global vv() = vverbose
+	global set_verbose(v) = (verbose = v)
+	global set_vverbose(v) = (vverbose = v)
+end
+
 """
 """
 function writelog(logname::String, bmlog::BMlog)
@@ -21,42 +28,65 @@ function writelog(logname::String)
 	close(ff)
 end
 
+"""
+"""
+function writeinfo(infofile::String, meta::BMmeta, ginit::Bool, mutants::Bool)
+	open(infofile, "w") do of
+		write(of, "Parameters of the bmlearn run:\n")
+		for f in fieldnames(BMmeta)
+			if f != :comment
+				write(of, "$f: $(getproperty(meta, f))\n")
+			end
+		end
+		write(of, "Initial non-zero graph provided: $ginit\n")
+		write(of, "Mutational data provided: $mutants\n")
+		write(of, "\nComment: $(meta.comment)")
+	end
+	nothing
+end
 
 """
-	bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64)
+	bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64;
+			ginit::DCAgraph = DCAgraph(L,q), gradinit=DCAgrad(L, q), mutants::MutData = MutData(),
+			kwargs...)
 
-Main BM learning function. Keywords correspond to starting point and meta parameters of the learning process.
+Learn a Boltzmann machine with target frequencies `f1` and `f2`. `L` and `q` are the length of sequences and number of characters of the alphabet. 
+`ginit` provides a starting point for the BM. If provided, `mutants::MutData` will be used to integrate mutational information (*e.g.* from a deep mutational scan). 
 
-Some useful ones
-- `nit`: Number of iterations of the gradient descent. 
-- `savefolder`: folder for output files (log and parameters). If unspecified or `""`, current directory is used.
-- `saveparam`: number of iterations after which parameters are saved.  
-- `logfile`: name of logfile. 
-- `ginit`: `DCAgraph` object. Initial values of parameters. 
-- `gradinit`: `DCAgrad` object. Initial value of gradient. Useful to restart a learning. Can also be used to train the model only on a subset of parameters by setting initial `stepJ` and `steph` to non zero values for those only. 
+Parameters guiding the learning process are provided as additional keyword arguments and passed to `BMmeta`. See `?BMmeta` for help. 
 """
-function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64 ; 
-	ginit::DCAgraph = DCAgraph(L,q), gradinit=DCAgrad(L, q), 
-	l2 = 0.01, l1 = 0.,
-	samplesize = 1000, 
-	basestepJ = 0.05, basesteph = 0.05,  stepJmax = 0.5, stephmax = 0.5,
-	aJup = 1.2, aJdown = 0.5, ahup = 1.2, ahdown = 0.5, 
-	adaptMup = 1.05, Mmax = 100000, 
-	update_tau = 10,
-	saveparam = 10, savefolder="",
-	mutants::MutData = MutData(), integrative_lambda=0, integrative_M = 1, 
-	nit = 50, 
-	nprocs = 1,
-	logfile="log.txt")
+function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64;
+			ginit::DCAgraph = DCAgraph(L,q), gradinit=DCAgrad(L, q), mutants::MutData = MutData(),
+			kwargs...)
+	try 
+		BMmeta(;kwargs...)
+	catch err
+		@warn "Unsupported keyword argument. See `?BMmeta` for help."
+		error(err)
+	end
+	bmlearn(f1, f2, L, q, BMmeta(;kwargs...), ginit=ginit, gradinit=gradinit, mutants=mutants)
+end
+
+"""
+	bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64, meta::BMmeta = BMmeta();
+			ginit::DCAgraph = DCAgraph(L,q), gradinit=DCAgrad(L, q), mutants::MutData = MutData())
+"""
+function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64, meta::BMmeta;
+	ginit::DCAgraph = DCAgraph(L,q), gradinit=DCAgrad(L, q), mutants::MutData = MutData())
 	
 	# Initializing save directory
-	if savefolder!=""
-		mkpath(savefolder)
-		logfile = "$(savefolder)/$(logfile)"
-	end
+	mkpath(meta.savefolder)
+	logfile = "$(meta.savefolder)/$(meta.logfile)"
+
+	# Writing info about run
+	writeinfo("$(meta.savefolder)/$(meta.infofile)", meta, ginit!=DCAgraph(L,q), !isempty(mutants.mutant))
+
+	# Setting verbosity
+	set_verbose(meta.verbose)
+
 
 	# Initializing meta data and log
-	meta = BMmeta(l2, l1, basestepJ, basesteph, stepJmax, stephmax, aJup, aJdown, ahup, ahdown, adaptMup, Mmax, integrative_lambda, integrative_M, saveparam, nprocs)
+	samplesize = meta.Minit
 	bmlog = BMlog()
 	bmlog.samplesize = samplesize
 
@@ -71,19 +101,19 @@ function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64 
 		switchgauge!(g, gauge="wt", wt = md.wt)
 	end
 
-	# Header for logfile
-	writelog(logfile)
+	# Header for meta.logfile
+	writelog(meta.logfile)
 
-	for it in 1:nit
-		if mod(it,update_tau) == 1
+	for it in 1:meta.nit
+		if mod(it,meta.update_tau) == 1
 			bmlog.tau = 0
 		end
 		cgrad = bmstep!(g, f1, f2, md, cgrad, meta, bmlog)
-		println(" --- It. $it out of $nit ---")
-		println("Norm of gradient: $(bmlog.gradnorm)")
+		v() && println(" --- It. $it out of $(meta.nit) ---")
+		v() && println("Norm of gradient: $(bmlog.gradnorm)")
 		writelog(logfile, bmlog)
-		if mod(it, meta.saveparam)==0 && savefolder!=""
-			writeparam("$(savefolder)/DCABM_it$(it)_mat.txt", g, format="mat")
+		if mod(it, meta.saveparam)==0 && meta.savefolder!=""
+			writeparam("$(meta.savefolder)/DCABM_it$(it)_mat.txt", g, format="mat")
 		elseif mod(it, meta.saveparam)==0
 			writeparam("DCABM_it$(it)_mat.txt", g, format="mat")
 		end
