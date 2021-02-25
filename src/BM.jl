@@ -101,7 +101,7 @@ Meta parameters for the BM learning. Those are never modified in the course of t
 - `nit::Int64 = 50`: number of iterations
 - `nprocs::Int64 = 1`: parallel MCMC is used if `nprocs>1` (not working super well if I remember correctly).
 - `update_tau::Int64 = 10`: steps separating MCMC samples is re-estimated every `update_tau`. 
-- `v::Bool = false`: verbosity
+- `verbose::Bool = false`: verbosity
 """
 @with_kw struct BMmeta
     # Regularization
