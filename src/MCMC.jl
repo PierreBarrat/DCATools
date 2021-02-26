@@ -74,24 +74,24 @@ function doMCMC(graph::DCAgraph, M::Int64, tau ; outfile="", T= 50*tau, beta = 1
     	graph_local = graph
     end
 
-    sample = zeros(Int64, M,graph_local.L)
+    @time sample = zeros(Int64, M,graph_local.L)
 
     # Initialisation
     verbose ? println("Initializing with ",T," iterations... ") : print("")
     # conf_init = rand(1:graph_local.q, graph_local.L)
-    conf_end = zeros(Int64, graph_local.L)
-    samplefromgraph!(graph_local, conf_init, conf_end, T)
-    sample[1,:] = conf_end
+    conf = zeros(Int64, graph_local.L)
+    samplefromgraph!(conf, graph_local, T)
+    sample[1,:] = conf
     verbose ? println("done!") : print("")
 
     # Sampling
     verbose ? println("Sampling") : print("")
-    for m = 1:M-1
+    @time for m = 1:M-1
         if verbose && mod(m+1,500)==0
             @printf("It %d/%d           \r",m+1,M)
         end
-        samplefromgraph!(graph_local, sample[m,:], conf_end, tau)
-        sample[m+1,:] .= conf_end
+        samplefromgraph!(conf, graph_local, tau)
+        sample[m+1,:] .= conf
     end
     verbose ? println("Done") : print("")
 
@@ -107,22 +107,22 @@ end
 
 Sample for `tau` sweeps from probability defined by `g`, starting with configuration `conf_init` and storing final configuration in `conf_end`. 
 """
-function samplefromgraph!(g::DCAgraph, conf_init::Array{Int64,1}, conf_end::Array{Int64,1}, tau::Int64)
-	rng = MersenneTwister(rand(1:100000))
+function samplefromgraph!(conf::Array{Int64,1}, g::DCAgraph, tau::Int64)
+	# @time rng = MersenneTwister(rand(1:100000))
 	E = 0.
 	q = g.q
 	L = g.L
 
-	brng = Random.Sampler(rng, Set(1:q))
-	Erng = Random.Sampler(rng, Float64)
-	copyto!(conf_end, conf_init)
+	# brng = Random.Sampler(rng, Set(1:q))
+	# Erng = Random.Sampler(rng, Float64)
+	# copyto!(conf_end, conf_init)
 
 	@fastmath @inbounds for t in 1:tau
 		for i in 1:L
-			a = conf_end[i]
-			b = rand(rng, brng)
+			a = conf[i]
+			b = rand(1:g.q)
 			while b==a
-				b = rand(rng, brng)
+				b = rand(1:q)
 			end
 
         	id_i_a = (i-1)*q+a
@@ -130,12 +130,12 @@ function samplefromgraph!(g::DCAgraph, conf_init::Array{Int64,1}, conf_end::Arra
         	E = g.h[id_i_a] - g.h[id_i_b]
         	for j = 1:L
         		if j != i
-        			E += g.J[id_i_a, (j-1)*q+conf_end[j]] - g.J[id_i_b, (j-1)*q+conf_end[j]]
+        			E += g.J[id_i_a, (j-1)*q+conf[j]] - g.J[id_i_b, (j-1)*q+conf[j]]
         		end
         	end
 
-        	if E<=0. || exp(-E) > rand(rng, Erng)
-        		conf_end[i] = b
+        	if E<=0. || exp(-E) > rand()
+        		conf[i] = b
         	end
     	end
 	end
