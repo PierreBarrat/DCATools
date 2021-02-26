@@ -10,7 +10,7 @@ using Parameters
 ## Things I could improve
 #=
 - The update_tau thing is a bit weird
-- 
+- Check that old scripts work with this version
 =#
 
 export DCAgrad, gradequal, BMmeta
@@ -47,11 +47,11 @@ end
 """
     *(λ::Float64, g::DCAgrad)
 """
-function *(λ::Float64, g::DCAgrad)
+function *(λ::Real, g::DCAgrad)
     return DCAgrad(λ * g.gradJ, λ*g.gradh, g.stepJ, g.steph, g.L, g.q)
 end
 """
-    *(g::DCAgrad, λ::Float64)
+    *(g::DCAgrad, λ::Real)
 """
 function *(g::DCAgrad, λ::Float64)
     return DCAgrad(λ * g.gradJ, λ*g.gradh, g.stepJ, g.steph, g.L, g.q)
