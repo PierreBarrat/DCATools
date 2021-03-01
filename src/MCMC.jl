@@ -232,7 +232,7 @@ function autocorr(sample::Array{Int64,2}, q::Int64)
 	return ac
 end
 
-function estimatetau(g::DCAgraph ; itau = 1, M = 1000, tol=0.05, nchains=5)
+function estimatetau(g::DCAgraph ; itau = 1, M = 300, tol=0.05, nchains=5)
 
 	S = [doMCMC(g, M, itau, T=100) for n in 1:nchains]
 	
