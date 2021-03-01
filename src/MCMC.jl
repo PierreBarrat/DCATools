@@ -74,23 +74,24 @@ function doMCMC(graph::DCAgraph, M::Int64, tau ; outfile="", T= 50*tau, beta = 1
     	graph_local = graph
     end
 
-    @time sample = zeros(Int64, M,graph_local.L)
+    sample = zeros(Int64, M,graph_local.L)
 
     # Initialisation
     verbose ? println("Initializing with ",T," iterations... ") : print("")
-    # conf_init = rand(1:graph_local.q, graph_local.L)
-    conf = zeros(Int64, graph_local.L)
-    samplefromgraph!(conf, graph_local, T)
+    conf = rand(1:graph_local.q, graph_local.L)
+    jdx = convert.(UInt16, collect((j-1)*graph_local.q+conf[j] for j in 1:graph_local.L))
+
+    samplefromgraph!(conf, jdx, graph_local, T)
     sample[1,:] = conf
     verbose ? println("done!") : print("")
 
     # Sampling
     verbose ? println("Sampling") : print("")
-    @time for m = 1:M-1
+    for m = 1:M-1
         if verbose && mod(m+1,500)==0
             @printf("It %d/%d           \r",m+1,M)
         end
-        samplefromgraph!(conf, graph_local, tau)
+        samplefromgraph!(conf, jdx, graph_local, tau)
         sample[m+1,:] .= conf
     end
     verbose ? println("Done") : print("")
@@ -107,15 +108,10 @@ end
 
 Sample for `tau` sweeps from probability defined by `g`, starting with configuration `conf_init` and storing final configuration in `conf_end`. 
 """
-function samplefromgraph!(conf::Array{Int64,1}, g::DCAgraph, tau::Int64)
-	# @time rng = MersenneTwister(rand(1:100000))
+function samplefromgraph!(conf::Array{Int64,1}, jdx::Array{UInt16,1}, g::DCAgraph, tau::Int64)
 	E = 0.
 	q = g.q
 	L = g.L
-
-	# brng = Random.Sampler(rng, Set(1:q))
-	# Erng = Random.Sampler(rng, Float64)
-	# copyto!(conf_end, conf_init)
 
 	@fastmath @inbounds for t in 1:tau
 		for i in 1:L
@@ -125,17 +121,18 @@ function samplefromgraph!(conf::Array{Int64,1}, g::DCAgraph, tau::Int64)
 				b = rand(1:q)
 			end
 
-        	id_i_a = (i-1)*q+a
+        	# id_i_a = (i-1)*q+a
         	id_i_b = (i-1)*q+b
-        	E = g.h[id_i_a] - g.h[id_i_b]
+        	E = g.h[jdx[i]] - g.h[id_i_b]
         	for j = 1:L
         		if j != i
-        			E += g.J[id_i_a, (j-1)*q+conf[j]] - g.J[id_i_b, (j-1)*q+conf[j]]
+        			E += g.J[jdx[i], jdx[j]] - g.J[id_i_b, jdx[j]]
         		end
         	end
 
         	if E<=0. || exp(-E) > rand()
         		conf[i] = b
+        		jdx[i] = (i-1)*q + b
         	end
     	end
 	end
