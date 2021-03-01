@@ -128,9 +128,9 @@ end
 """
 function bmsample(g::DCAgraph, M::Int64, nprocs, tau::Int64)
 	if tau == 0
-		tau = 3*estimatetau(g, mode="fast", nprocs=nprocs)
+		tau = estimatetau(g)[1]
 	end
-	return doMCMC(g, M, tau, T = 20*tau, nprocs = nprocs), tau
+	return doMCMC(g, M, tau, T = 10*tau, nprocs = nprocs), tau
 end
 
 """

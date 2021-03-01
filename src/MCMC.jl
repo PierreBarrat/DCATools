@@ -188,25 +188,25 @@ Attempt to estimate reasonable number of iterations between samples. Based on au
 - Conservative: if the autocorrelation of the most autocorrelated spin is smaller than 1/e, eq. is reached. 
 - Fast: if the average absolute autocorrelation etc... 
 """
-function estimatetau(g::DCAgraph ; itau = 1, M = 1000, threshold = 1/2.7, mode = "conservative", nprocs=1)
+# function estimatetau(g::DCAgraph ; itau = 1, M = 1000, threshold = 1/2.7, mode = "conservative", nprocs=1)
 
-	t = doMCMC(g, M, itau, T=10000, nprocs=nprocs)
-	ac = autocorr(t, g.q)
-	out = Int64(0)
+# 	t = doMCMC(g, M, itau, T=10000, nprocs=nprocs)
+# 	ac = autocorr(t, g.q)
+# 	out = Int64(0)
 
-	if mode == "conservative"
-		score = vec(findmax(ac, dims=2)[1])
-	elseif mode == "fast"
-		score = vec(mean(abs.(ac),dims=2))
-	end
-	if typeof(findnext(x->x<threshold, score, 1)) != Nothing
-		out =  Int64(findnext(x->x<threshold, score, 1)) * itau
-	else
-		out =  size(ac,1) * itau
-	end
+# 	if mode == "conservative"
+# 		score = vec(findmax(ac, dims=2)[1])
+# 	elseif mode == "fast"
+# 		score = vec(mean(abs.(ac),dims=2))
+# 	end
+# 	if typeof(findnext(x->x<threshold, score, 1)) != Nothing
+# 		out =  Int64(findnext(x->x<threshold, score, 1)) * itau
+# 	else
+# 		out =  size(ac,1) * itau
+# 	end
 
-	return Int64(out)
-end
+# 	return Int64(out)
+# end
 
 """
 	autocorr(sample::Array{Int64,2}, q::Int64)
@@ -232,4 +232,59 @@ function autocorr(sample::Array{Int64,2}, q::Int64)
 	return ac
 end
 
+function estimatetau(g::DCAgraph ; itau = 1, M = 1000, tol=0.05, nchains=5)
+
+	S = [doMCMC(g, M, itau, T=100) for n in 1:nchains]
+	
+	# Hamming distance vs time internally to a sample
+	nav = 10
+	h_intra = [DCATools.moving_average(hamming_v_time(S[n]), nav) / g.L for n in 1:nchains]
+	
+	# mean Hamming distance between samples 
+	h_inter = maximum([mean(hamming_v_time(S1,S2)[M-100:end]) for S1 in S, S2 in S])/ g.L
+
+	for tau in 1:length(h_intra[1])
+		flag = true
+		for n in 1:nchains
+			if !isapprox(h_intra[n][tau], h_inter, atol=tol)
+				flag = false
+				break
+			end
+		end
+		if flag
+			return tau * itau, h_intra, h_inter
+		end
+	end
+	return length(h_intra[1]) * itau, h_intra, h_inter
 end
+
+
+function hamming_v_time(sample)
+	(M,L) = size(sample)
+	navmin = 25
+	h = zeros(Float64, M-navmin)
+	for t in 1:(M-navmin)
+		for m in 1:(M-t)
+			h[t] += DCATools.hamming(sample[m,:], sample[m+t,:]) 
+		end
+		h[t] /= (M-t)
+	end
+	return h
+end
+
+function hamming_v_time(S1, S2)
+	(M,L) = size(S1)
+	if size(S2) != size(S1)
+		@error "Samples of different sizes"
+	end
+	navmin = M-25
+	h = Array{Float64,1}(undef, M)
+	for m in 1:M
+		h[m] = DCATools.hamming(S1[m,:], S2[m,:])
+	end
+	return h
+end
+
+
+
+end # Module

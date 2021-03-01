@@ -252,6 +252,26 @@ function aa2bin(x::Array{Int64,2} ;q=21)
     return out
 end
 
-function hamming(x,y)
-    return sum(x .!= y)
+"""
+    hamming(X,Y)
+"""
+function hamming(X,Y)
+    S = 0
+    for (x,y) in zip(X,Y)
+        S += (x != y)
+    end
+    return S
 end
+
+function moving_average(X, n::Int64)
+    if length(X) < n
+        @error "`X` shorter than `n`=$n"
+    end
+    out = Array{Float64, 1}(undef, length(X)-n)
+    for i in 1:length(X)-n
+        # Av from X[i] to X[i+n]
+        out[i] = mean(X[i:i+n])
+    end
+    return out
+end
+
