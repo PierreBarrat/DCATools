@@ -73,7 +73,9 @@ end
 Meta parameters for the BM learning. Those are never modified in the course of the computation. Call `BMmeta(;kwargs...)` for constructing an instance of `BMmeta`.
 
 ### Regularization
-- `l2::Float64 = 0.01`: l2 regularization
+- `l2J::Float64 = 0.01`: l2 regularization for couplings
+- `l2h::Float64 = 0.01`: l2 regularization for fields
+- `l2::Union{Missing, Float64} = missing`: joint l2 regularization. Supersedes `l2J` and `l2h`. 
 - `l1::Float64 = 0.`: l1 regularization
 ### Estimating gradient
 - `Minit::Int64 = 1_000`: initial size of MCMC sample
@@ -105,7 +107,9 @@ Meta parameters for the BM learning. Those are never modified in the course of t
 """
 @with_kw struct BMmeta
     # Regularization
-    l2::Float64 = 0.01
+    l2J::Float64 = 0.01
+    l2h::Float64 = 0.01
+    l2::Union{Missing, Float64} = missing
     l1::Float64 = 0.
     # Estimating gradient
     Minit::Int64 = 1_000

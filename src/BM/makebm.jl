@@ -147,7 +147,11 @@ function bmstep!(g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, md::Mu
 
 	# Compute gradient from frequency difference and l2 regularization
 	freqgrad, p1, p2 = computegradient(sample, f1, f2, g.q)
-	reg = computel2(g, meta.l2)
+	if !ismissing(meta.l2)
+		reg = computel2(g, meta.l2)
+	else
+		reg = computel2(g, meta.l2J, meta.l2h)
+	end
 	gradtot = freqgrad + reg
 
 	# If l1 regularization exists, add it to gradient

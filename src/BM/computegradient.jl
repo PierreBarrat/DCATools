@@ -83,6 +83,19 @@ function computel2(g::DCAgraph, lambda::Float64)
 
 	return grad
 end
+"""
+	computel2(g::DCAgraph, lambdaJ::Float64, lambdah::Float64)
+
+Return gradient corresponding to l2 regularization. 
+"""
+function computel2(g::DCAgraph, lambdaJ::Float64, lambdah::Float64)
+
+	grad = DCAgrad(g.L, g.q)
+	grad.gradJ = -lambdaJ*g.J
+	grad.gradh = -lambdah*g.h
+
+	return grad
+end
 
 """
 	computel1(g::DCAgraph, lambda::Float64)
