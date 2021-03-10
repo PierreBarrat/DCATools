@@ -5,7 +5,7 @@ using Statistics
 using LinearAlgebra
 using FastaIO
 
-import Base: *, getindex, ==
+import Base: *, getindex, setindex!, ==
 
 """
 	DCAgraph
@@ -42,7 +42,21 @@ end
 """
 """
 getindex(g::DCAgraph, i, j, a, b) = g.J[(i .-1)*g.q .+ a, (j .-1)*g.q .+ b]
+getindex(g::DCAgraph, i, j, a, b::Colon) = g.J[(i .-1)*g.q .+ a, (j .-1)*g.q .+ (1:g.q)]
+getindex(g::DCAgraph, i, j, a::Colon, b) = g.J[(i .-1)*g.q .+ (1:g.q), (j .-1)*g.q .+ b]
+getindex(g::DCAgraph, i, j, a::Colon, b::Colon) = g.J[(i .-1)*g.q .+ (1:g.q), (j .-1)*g.q .+ (1:g.q)]
+
 getindex(g::DCAgraph, i, a) = g.h[(i .-1)*g.q .+ a]
+getindex(g::DCAgraph, i, a::Colon) = g.h[(i .-1)*g.q .+ (1:g.q)]
+
+setindex!(g::DCAgraph, val, i, j, a, b) = (g.J[(i .-1)*g.q .+ a, (j .-1)*g.q .+ b] = val)
+setindex!(g::DCAgraph, val, i, j, a::Colon, b) = (g.J[(i .-1)*g.q .+ (1:g.q), (j .-1)*g.q .+ b] = val)
+setindex!(g::DCAgraph, val, i, j, a, b::Colon) = (g.J[(i .-1)*g.q .+ a, (j .-1)*g.q .+ (1:g.q)] = val)
+setindex!(g::DCAgraph, val, i, j, a::Colon, b::Colon) = (g.J[(i .-1)*g.q .+ (1:g.q), (j .-1)*g.q .+ (1:g.q)] = val)
+
+
+setindex!(g::DCAgraph, val, i, a) = (g.h[(i .-1)*g.q .+ a] = val)
+setindex!(g::DCAgraph, val, i, a::Colon) = (g.h[(i .-1)*g.q .+ (1:g.q)] = val)
 
 function ==(g1::DCAgraph, g2::DCAgraph) 
     g1.J == g2.J && g1.h == g2.h && g1.L == g2.L && g1.q == g2.q
