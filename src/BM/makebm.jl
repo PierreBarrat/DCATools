@@ -97,9 +97,9 @@ function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64,
 
 	# Copying mutants
 	md = deepcopy(mutants)
-	if !isempty(md.mutant)
-		switchgauge!(g, gauge="wt", wt = md.wt)
-	end
+	# if !isempty(md.mutant)
+	# 	switchgauge!(g, gauge="wt", wt = md.wt)
+	# end
 
 	# Header for meta.logfile
 	writelog(meta.logfile)
