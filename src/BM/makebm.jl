@@ -102,7 +102,7 @@ function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64,
 	# end
 
 	# Header for meta.logfile
-	writelog(meta.logfile)
+	writelog(logfile)
 
 	for it in 1:meta.nit
 		if mod(it,meta.update_tau) == 1

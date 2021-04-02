@@ -38,7 +38,7 @@ function doMCMC_par(graph::DCAgraph, M::Int64, tau, nprocs::Int64; T= 50*tau, be
 end
 
 """
-	doMCMC(graph::DCAgraph, M::Int64, tau ; outfile="", T= 100000, beta = 1.0, verbose = false,conf_init=rand(1:graph.q, graph.L), nprocs = 1)
+	doMCMC(graph::DCAgraph, M::Int64, tau ; outfile="", T= 50*tau, beta = 1.0, verbose = false,conf_init=rand(1:graph.q, graph.L), nprocs = 1)
 
 Sample `M` configurations from probability distribution defined by `graph`. Number of MCMC sweeps between configurations is `tau`. 
 
