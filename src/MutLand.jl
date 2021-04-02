@@ -83,7 +83,17 @@ MutData() = MutData(Array{Int64,1}(undef, 0),0.,0., Array{Mutant,1}(undef, 0),0,
 
 Read data stored in `infile` to a `MutData` structure. Mapping single mutants `SingleMutant` of each `Mutant` to their value found in the data is optional. 
 
-Note that energies and epistatic effect are not computed here. 
+`infile` should look like this: 
+```
+>wt x1 x2 x3 ... *numerical wt sequence, space separated*
+>info L q
+n i a j b ... val *where n is the degree of the mutant*
+.              .
+.              .
+.              .
+```
+
+Does **not** compute energies or epistatic effects.
 """
 function readmutdata(infile::String ; mapsingle = false)
 
