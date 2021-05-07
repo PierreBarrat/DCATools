@@ -24,7 +24,7 @@ end
 """
 	*(B, g::DCAgraph)
 
-Multiply fields and couplings in `g` by scalar `B`. Useful to change temperature. 
+Multiply fields and couplings in `g` by scalar `B`. Useful to change temperature.
 """
 function *(B, g::DCAgraph)
     return DCAgraph(B*g.J, B*g.h, g.L, g.q)
@@ -33,7 +33,7 @@ end
 """
 	*(B, g::DCAgraph)
 
-Multiply fields and couplings in `g` by scalar `B`. Useful to change temperature. 
+Multiply fields and couplings in `g` by scalar `B`. Useful to change temperature.
 """
 function *(g::DCAgraph, B)
     return DCAgraph(B*g.J, B*g.h, g.L, g.q)
@@ -58,12 +58,12 @@ setindex!(g::DCAgraph, val, i, j, a::Colon, b::Colon) = (g.J[(i .-1)*g.q .+ (1:g
 setindex!(g::DCAgraph, val, i, a) = (g.h[(i .-1)*g.q .+ a] = val)
 setindex!(g::DCAgraph, val, i, a::Colon) = (g.h[(i .-1)*g.q .+ (1:g.q)] = val)
 
-function ==(g1::DCAgraph, g2::DCAgraph) 
+function ==(g1::DCAgraph, g2::DCAgraph)
     g1.J == g2.J && g1.h == g2.h && g1.L == g2.L && g1.q == g2.q
 end
 
 
-
+include("global.jl")
 include("inputoutput.jl")
 include("alignmenttools.jl")
 include("modeltools.jl")
@@ -76,8 +76,22 @@ export DCAgraph, *
 # Other sub-modules
 include("MCMC.jl")
 export doMCMC
-include("MutLand.jl")
-export SingleMut, Mutant, MutData, readmutdata, mapsinglemut!, findsinglemut, finddoublemut, computeepistasis!
+
+#
+include("MutLand/MutLand.jl")
+export MutData
+export Mutant
+export SingleMut
+
+export computeenergies!
+export computeepistasis!
+export findsinglemut
+export finddoublemut
+export mapenergies!
+export mapsinglemut!
+export readmutdata
+
+#
 include("BM.jl")
 export bmlearn
 

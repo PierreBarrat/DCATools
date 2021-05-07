@@ -3,7 +3,7 @@ export computefreqs, computeweights, pdist, convert_fasta
 """
     computefreqs(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
 
-Base routine for computing frequencies in sample `Y`. `w` is an array containing the weights. 
+Base routine for computing frequencies in sample `Y`. `w` is an array containing the weights.
 """
 function computefreqs(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
     if typeof(w)==Array{Float64,2}
@@ -13,11 +13,11 @@ function computefreqs(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
 
     (M,L) = size(Y)
     f2 = zeros(Float64, L*q, L*q)
-    f1 = zeros(Float64,L*q) 
+    f1 = zeros(Float64,L*q)
 
     if size(w)[1]!=M
         error("alignmenttools.jl - computefreqs: incorrect number of weights\n")
-    end 
+    end
 
     Meff = sum(w)
     for m in 1:M
@@ -43,12 +43,12 @@ end
 
 Compute pairwise frequencies for an array input. `Y` is an array of `Int64`. Return frequencies `f1` and `f2` and weights.
 
-Keywords: 
+Keywords:
 - `q`: default `findmax(Y)[1]`
 - `weights`: default `[]`. If it is a `String`, phylogenetic weights are read from the corresponding file. If it is an `Array{Float64,1}`, they are used directly.
-- `computew`: default `false`. If true, phylogenetic weights are computed, calling the appropriate `computeweights`. `weights` is then ignored. 
-- `saveweights` and `theta`: see `computeweights`. 
-- `pc`: default 0. Pseudocount ratio. 
+- `computew`: default `false`. If true, phylogenetic weights are computed, calling the appropriate `computeweights`. `weights` is then ignored.
+- `saveweights` and `theta`: see `computeweights`.
+- `pc`: default 0. Pseudocount ratio.
 """
 function computefreqs(Y::Array{Int64,2}; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", pc=0.)
     w = Array{Float64,1}(undef, 0)
@@ -99,11 +99,11 @@ end
 
 Compute pairwise frequencies for a file input. `msa` is a file containing the alignment in numerical format. Return frequencies `f1` and `f2` and weights.
 
-Keywords: 
+Keywords:
 - `q`: default `findmax(Y)[1]`
 - `weights`: default `[]`. If it is a `String`, phylogenetic weights are read from the corresponding file. If it is an `Array{Float64,1}`, they are used directly.
-- `computew`: default `false`. If true, phylogenetic weights are computed, calling the appropriate `computeweights`. `weights` is then ignored. 
-- `saveweights` and `theta`: see `computeweights`. 
+- `computew`: default `false`. If true, phylogenetic weights are computed, calling the appropriate `computeweights`. `weights` is then ignored.
+- `saveweights` and `theta`: see `computeweights`.
 - `header` and `format`: see `readmsanum`.
 - `pc`: default 0. Pseudocount ratio.
 """
@@ -120,12 +120,12 @@ end
 """
     computeweights(msa::String; theta::Float64 = 0.2, saveweights::String = "", format=1, header=false)
 
-Compute weights for file input. Compute weights of each sequence in file `msa` using reweighting threshold `theta` (default 0.2). 
+Compute weights for file input. Compute weights of each sequence in file `msa` using reweighting threshold `theta` (default 0.2).
 
-Keywords: 
-- `theta`: threshold of similarity under which sequences are weighted down. Default `0.2`. 
+Keywords:
+- `theta`: threshold of similarity under which sequences are weighted down. Default `0.2`.
 - `saveweights`: weights are saved there if non empty. Default `""`
-- `format` and `header`: used to read `msa`. See `readmsanum`. 
+- `format` and `header`: used to read `msa`. See `readmsanum`.
 """
 function computeweights(msa::String; theta::Float64 = 0.2, saveweights::String = "", format=1, header=false)
     Y = readmsanum(msa, format=format, header=header)
@@ -134,15 +134,15 @@ function computeweights(msa::String; theta::Float64 = 0.2, saveweights::String =
 end
 
 """
-    computeweights(Y::Array{Int64,2} ; theta = 0.2, saveweights="")  
+    computeweights(Y::Array{Int64,2} ; theta = 0.2, saveweights="")
 
-Compute weights for array input. Compute weights of each sequence in file `msa` using reweighting threshold `theta` (default 0.2). 
+Compute weights for array input. Compute weights of each sequence in file `msa` using reweighting threshold `theta` (default 0.2).
 
-Keywords: 
-- `theta`: threshold of similarity under which sequences are weighted down. Default `0.2`. 
+Keywords:
+- `theta`: threshold of similarity under which sequences are weighted down. Default `0.2`.
 - `saveweights`: weights are saved there if non empty. Default `""`
 """
-function computeweights(Y::Array{Int64,2} ; theta = 0.2, saveweights="") 
+function computeweights(Y::Array{Int64,2} ; theta = 0.2, saveweights="")
     w = computeweights(Y, theta)
     if saveweights!=""
         writedlm(saveweights,w," ")
@@ -153,7 +153,7 @@ end
 """
     computeweights(Y::Array{Int64,2},theta::Float64)
 
-Basic routine. Compute weights of sequences in alignment `Y`, using threshold `theta`. 
+Basic routine. Compute weights of sequences in alignment `Y`, using threshold `theta`.
 """
 function computeweights(Y::Array{Int64,2}, theta::Float64)
     Y = Y';
@@ -180,7 +180,7 @@ end
 """
     pdist(Y::Array{Int64,2})
 
-Pairwise hamming distance between sequences in lines of `Y`. 
+Pairwise hamming distance between sequences in lines of `Y`.
 """
 function pdist(Y::Array{Int64,2})
     M = size(Y,1)
@@ -192,16 +192,16 @@ function pdist(Y::Array{Int64,2})
         end
     end
     return out + out'
-end 
+end
 
 
 """
-    convert_fasta(infasta::String, outfasta::String)
+    convert_fasta(infasta::String, outfasta::String, mapping)
 
-Convert amino-acid characters in `infasta` to numbers, using the mapping `-ACDEFGHIKLMNPQRSTVWY`. 
-Write result to `outfasta`.  
+Convert amino-acid characters in `infasta` to numbers, using `mapping.
+Write result to `outfasta`.
 """
-function convert_fasta(infasta::String, outfasta::String, mapping = "-ACDEFGHIKLMNPQRSTVWY")
+function convert_fasta(infasta::String, outfasta::String, mapping = DEFAULT_AA_MAPPING)
     fasta = readfasta(infasta)
     out = Array{Int64,2}(undef, length(fasta), length(fasta[1][2]))
     for (i,(n,s)) in enumerate(fasta)
@@ -210,7 +210,7 @@ function convert_fasta(infasta::String, outfasta::String, mapping = "-ACDEFGHIKL
     writedlm(outfasta, out, ' ')
 end
 
-function convert_seq(s::String, mapping = "-ACDEFGHIKLMNPQRSTVWY")
+function convert_seq(s::String, mapping = DEFAULT_AA_MAPPING)
     mapdict = Dict(x=>findfirst(a->a==x, mapping) for x in mapping)
     σ = Array{Int64,1}(undef, length(s))
     for (i,a) in enumerate(s)
@@ -218,15 +218,11 @@ function convert_seq(s::String, mapping = "-ACDEFGHIKLMNPQRSTVWY")
     end
     return σ
 end
-# """
-# """
-# function PCA(f1::Array{Float64,1}, f2::Array{Float64,2})
-# end
 
 """
     compute_profile(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
 
-Base routine for computing profile in sample `Y`. `w` is an array containing the weights. 
+Base routine for computing profile in sample `Y`. `w` is an array containing the weights.
 """
 function compute_profile(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
     if typeof(w)==Array{Float64,2}
@@ -235,11 +231,11 @@ function compute_profile(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
     end
 
     (M,L) = size(Y)
-    f1 = zeros(Float64,L*q) 
+    f1 = zeros(Float64,L*q)
 
     if size(w)[1]!=M
         error("Incorrect number of weights\n")
-    end 
+    end
 
     Meff = sum(w)
     for m in 1:M
@@ -255,12 +251,12 @@ end
 
 Compute single site frequencies for an array input. `Y` is an array of `Int64`. Return frequencies `f1` and weights.
 
-Keywords: 
+Keywords:
 - `q`: default `findmax(Y)[1]`
 - `weights`: default `[]`. If it is a `String`, phylogenetic weights are read from the corresponding file. If it is an `Array{Float64,1}`, they are used directly.
-- `computew`: default `false`. If true, phylogenetic weights are computed, calling the appropriate `computeweights`. `weights` is then ignored. 
-- `saveweights` and `theta`: see `computeweights`. 
-- `pc`: default 0. Pseudocount ratio. 
+- `computew`: default `false`. If true, phylogenetic weights are computed, calling the appropriate `computeweights`. `weights` is then ignored.
+- `saveweights` and `theta`: see `computeweights`.
+- `pc`: default 0. Pseudocount ratio.
 """
 function compute_profile(Y::Array{Int64,2}; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", pc=0.)
     w = Array{Float64,1}(undef, 0)
