@@ -56,7 +56,33 @@ function readmutdata(infile::AbstractString ; mapsingle = false)
 	return mutdata
 end
 
+"""
+	export_as_dataframe(md::MutData)
+"""
+function export_as_dataframe(md::MutData)
+	df = DataFrame((
+		i = Array{Union{Int, Array{Int,1}}}(undef,0),
+		olda = Array{Union{Int, Array{Int,1}}}(undef,0),
+		a = Array{Union{Int, Array{Int,1}}}(undef,0),
+		degree = Int[],
+		fitness = Float64[],
+		df = Float64[],
+		E = Float64[],
+		dE = Float64[],
+	))
+	for mut in md.mutant
+		deg = length(mut.smut)
+		push!(df, Dict(
+			:i => deg == 1 ? first(mut.smut).i : [s.i for s in mut.smut],
+			:olda => deg == 1 ? md.wt[first(mut.smut).i] : [md.wt[s.i] for s in mut.smut],
+			:a => deg == 1 ? first(mut.smut).a : [s.a for s in mut.smut],
+			:degree => deg,
+			:fitness => mut.fitness,
+			:df => mut.dfitness,
+			:E => mut.E,
+			:dE => mut.dE,
+		))
+	end
 
-# function export_as_dataframe(md::MutData)
-
-# end
+	return df
+end
