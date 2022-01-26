@@ -149,7 +149,7 @@ Sample for `round(tau*L)` swaps from probability defined by `g`, starting with c
 This version is used if `τ` is not an integer. It allows doing single swaps for `τ=1/L`  
 """
 function samplefromgraph!(g::DCAgraph, conf_init::Array{Int64,1}, conf_end::Array{Int64,1}, tau::Float64)
-	rng = MersenneTwister(rand(1:100000))
+	rng = rand(1:100000)
 	E = 0.
 	q = g.q
 	L = g.L
