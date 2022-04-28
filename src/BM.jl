@@ -2,7 +2,6 @@ module BM
 
 using DCATools
 using DCATools.MutLand
-using DCATools.MCMC
 using Printf
 using Statistics
 using Parameters

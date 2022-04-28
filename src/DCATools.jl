@@ -1,10 +1,12 @@
 module DCATools
 
 using DelimitedFiles
-using Statistics
 using LinearAlgebra
+using Printf
+using Random
+using Statistics
 
-import Base: *, getindex, setindex!, ==
+import Base: *, getindex, setindex!, ==, size
 
 
 include("objects.jl")
@@ -29,8 +31,9 @@ export fitquality, threepointscor, corr3p
 include("MF.jl")
 
 # Other sub-modules
-include("MCMC.jl")
-export doMCMC
+include("sampling.jl")
+export sample
+
 
 #
 include("MutLand/MutLand.jl")

@@ -1,5 +1,5 @@
 using Test
-using DCATools, DCATools.MCMC
+using DCATools
 using Statistics, Polynomials
 
 q = 21
@@ -7,7 +7,7 @@ g = readparam("testMCMC/parameters_PF01535_mat.txt", q=q)
 sample_ref = readmsanum("testMCMC/MC_matteo.txt", format=0, header=true)
 f1,f2 = pairwise_frequencies(sample_ref)
 
-sample_test = doMCMC(g, 5_000, 5)
+sample_test = sample(g, 5_000; Twait=5)
 p1,p2 = pairwise_frequencies(sample_ref)
 
 @testset "Correlation/slope of frequencies" begin

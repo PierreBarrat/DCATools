@@ -144,7 +144,7 @@ function bmsample(g::DCAgraph, M::Int64, nprocs, tau::Int64)
 	if tau == 0
 		tau = min(estimatetau(g)[1], g.L)
 	end
-	return doMCMC(g, M, tau, T = 10*tau, nprocs = nprocs), tau
+	return sample(g, M; Twait = tau), tau
 end
 
 """

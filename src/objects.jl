@@ -12,12 +12,14 @@ function DCAgraph(L,q)
 end
 
 
+Base.size(g::DCAgraph) = (g.q, g.L)
+
 """
 	*(B, g::DCAgraph)
 
 Multiply fields and couplings in `g` by scalar `B`. Useful to change temperature.
 """
-function *(B, g::DCAgraph)
+function Base.:*(B, g::DCAgraph)
     return DCAgraph(B*g.J, B*g.h, g.L, g.q)
 end
 
@@ -26,29 +28,29 @@ end
 
 Multiply fields and couplings in `g` by scalar `B`. Useful to change temperature.
 """
-function *(g::DCAgraph, B)
+function Base.:*(g::DCAgraph, B)
     return DCAgraph(B*g.J, B*g.h, g.L, g.q)
 end
 
 """
 """
-getindex(g::DCAgraph, i, j, a, b) = g.J[(i .-1)*g.q .+ a, (j .-1)*g.q .+ b]
-getindex(g::DCAgraph, i, j, a, b::Colon) = g.J[(i .-1)*g.q .+ a, (j .-1)*g.q .+ (1:g.q)]
-getindex(g::DCAgraph, i, j, a::Colon, b) = g.J[(i .-1)*g.q .+ (1:g.q), (j .-1)*g.q .+ b]
-getindex(g::DCAgraph, i, j, a::Colon, b::Colon) = g.J[(i .-1)*g.q .+ (1:g.q), (j .-1)*g.q .+ (1:g.q)]
+Base.getindex(g::DCAgraph, i, j, a, b) = g.J[(i .-1)*g.q .+ a, (j .-1)*g.q .+ b]
+Base.getindex(g::DCAgraph, i, j, a, b::Colon) = g.J[(i .-1)*g.q .+ a, (j .-1)*g.q .+ (1:g.q)]
+Base.getindex(g::DCAgraph, i, j, a::Colon, b) = g.J[(i .-1)*g.q .+ (1:g.q), (j .-1)*g.q .+ b]
+Base.getindex(g::DCAgraph, i, j, a::Colon, b::Colon) = g.J[(i .-1)*g.q .+ (1:g.q), (j .-1)*g.q .+ (1:g.q)]
 
-getindex(g::DCAgraph, i, a) = g.h[(i .-1)*g.q .+ a]
-getindex(g::DCAgraph, i, a::Colon) = g.h[(i .-1)*g.q .+ (1:g.q)]
+Base.getindex(g::DCAgraph, i, a) = g.h[(i .-1)*g.q .+ a]
+Base.getindex(g::DCAgraph, i, a::Colon) = g.h[(i .-1)*g.q .+ (1:g.q)]
 
-setindex!(g::DCAgraph, val, i, j, a, b) = (g.J[(i .-1)*g.q .+ a, (j .-1)*g.q .+ b] = val)
-setindex!(g::DCAgraph, val, i, j, a::Colon, b) = (g.J[(i .-1)*g.q .+ (1:g.q), (j .-1)*g.q .+ b] = val)
-setindex!(g::DCAgraph, val, i, j, a, b::Colon) = (g.J[(i .-1)*g.q .+ a, (j .-1)*g.q .+ (1:g.q)] = val)
-setindex!(g::DCAgraph, val, i, j, a::Colon, b::Colon) = (g.J[(i .-1)*g.q .+ (1:g.q), (j .-1)*g.q .+ (1:g.q)] = val)
+Base.setindex!(g::DCAgraph, val, i, j, a, b) = (g.J[(i .-1)*g.q .+ a, (j .-1)*g.q .+ b] = val)
+Base.setindex!(g::DCAgraph, val, i, j, a::Colon, b) = (g.J[(i .-1)*g.q .+ (1:g.q), (j .-1)*g.q .+ b] = val)
+Base.setindex!(g::DCAgraph, val, i, j, a, b::Colon) = (g.J[(i .-1)*g.q .+ a, (j .-1)*g.q .+ (1:g.q)] = val)
+Base.setindex!(g::DCAgraph, val, i, j, a::Colon, b::Colon) = (g.J[(i .-1)*g.q .+ (1:g.q), (j .-1)*g.q .+ (1:g.q)] = val)
 
 
-setindex!(g::DCAgraph, val, i, a) = (g.h[(i .-1)*g.q .+ a] = val)
-setindex!(g::DCAgraph, val, i, a::Colon) = (g.h[(i .-1)*g.q .+ (1:g.q)] = val)
+Base.setindex!(g::DCAgraph, val, i, a) = (g.h[(i .-1)*g.q .+ a] = val)
+Base.setindex!(g::DCAgraph, val, i, a::Colon) = (g.h[(i .-1)*g.q .+ (1:g.q)] = val)
 
-function ==(g1::DCAgraph, g2::DCAgraph)
+function Base.:(==)(g1::DCAgraph, g2::DCAgraph)
     g1.J == g2.J && g1.h == g2.h && g1.L == g2.L && g1.q == g2.q
 end

@@ -63,7 +63,7 @@ function pairwise_frequencies(
         w = computeweights(Y, theta=theta, saveweights=saveweights)
         if weights!=[]
             # computew cancels weights
-            @warn("both keywords `weights` and `computew` were declared. `weights` ignored.\n")
+            @warn("both keywords `weights` and `computew` declared. `weights` ignored.\n")
         end
     else
         if weights == []
