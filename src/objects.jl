@@ -50,7 +50,3 @@ Base.setindex!(g::DCAgraph, val, i, j, a::Colon, b::Colon) = (g.J[(i .-1)*g.q .+
 
 Base.setindex!(g::DCAgraph, val, i, a) = (g.h[(i .-1)*g.q .+ a] = val)
 Base.setindex!(g::DCAgraph, val, i, a::Colon) = (g.h[(i .-1)*g.q .+ (1:g.q)] = val)
-
-function Base.:(==)(g1::DCAgraph, g2::DCAgraph)
-    g1.J == g2.J && g1.h == g2.h && g1.L == g2.L && g1.q == g2.q
-end

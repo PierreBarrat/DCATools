@@ -1,5 +1,3 @@
-export bmstep!, bmlearn
-
 let verbose::Bool = false
 	global v() = verbose
 	global vv() = vverbose

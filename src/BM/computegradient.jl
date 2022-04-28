@@ -1,6 +1,3 @@
-export computegradient, computel2
-
-
 """
 	updateparameters!(g::DCAgraph, grad::DCAgrad)
 

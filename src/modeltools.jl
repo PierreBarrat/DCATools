@@ -6,8 +6,6 @@ Implemented gauges:
 - 0 sum: `:sum0`
 - Lattice gas (state `col` has energy 0): `:LG`, `:lg`, `:latticegas`.
 - Wild type (sequence `wt` has energy 0): `:wt`
--
-
 """
 function switchgauge!(g::DCAgraph; gauge=:sum0, col=g.q, wt=Array{Int,1}(undef,0))
     if gauge==:sum0
@@ -184,7 +182,7 @@ function inferprofile(f1::Array{Float64,1}, q; pc = 1e-5, save="")
     if save!=""
         writedlm(outfile, [zeros(L*q,L*q) ; h'], " ")
     end
-    return DCAgraph(zeros(L*q,L*q),h,L,q)
+    return DCAgraph(zeros(L*q,L*q), h, L, q)
 end
 
 
