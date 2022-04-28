@@ -41,12 +41,16 @@ Base.getindex(g::DCAgraph, i, j, a::Colon, b::Colon) = g.J[(i .-1)*g.q .+ (1:g.q
 
 Base.getindex(g::DCAgraph, i, a) = g.h[(i .-1)*g.q .+ a]
 Base.getindex(g::DCAgraph, i, a::Colon) = g.h[(i .-1)*g.q .+ (1:g.q)]
+Base.getindex(g::DCAgraph, i::Colon, a) = g.h[(0:g.L-1)*g.q .+ a]
+Base.getindex(g::DCAgraph, i::Colon, a::Colon) = g.h[:]
 
 Base.setindex!(g::DCAgraph, val, i, j, a, b) = (g.J[(i .-1)*g.q .+ a, (j .-1)*g.q .+ b] = val)
-Base.setindex!(g::DCAgraph, val, i, j, a::Colon, b) = (g.J[(i .-1)*g.q .+ (1:g.q), (j .-1)*g.q .+ b] = val)
-Base.setindex!(g::DCAgraph, val, i, j, a, b::Colon) = (g.J[(i .-1)*g.q .+ a, (j .-1)*g.q .+ (1:g.q)] = val)
-Base.setindex!(g::DCAgraph, val, i, j, a::Colon, b::Colon) = (g.J[(i .-1)*g.q .+ (1:g.q), (j .-1)*g.q .+ (1:g.q)] = val)
+Base.setindex!(g::DCAgraph, val, i, j, a::Colon, b) = (g.J[(i .-1)*g.q .+ (1:g.q), (j .-1)*g.q .+ b] .= val)
+Base.setindex!(g::DCAgraph, val, i, j, a, b::Colon) = (g.J[(i .-1)*g.q .+ a, (j .-1)*g.q .+ (1:g.q)] .= val)
+Base.setindex!(g::DCAgraph, val, i, j, a::Colon, b::Colon) = (g.J[(i .-1)*g.q .+ (1:g.q), (j .-1)*g.q .+ (1:g.q)] .= val)
 
 
 Base.setindex!(g::DCAgraph, val, i, a) = (g.h[(i .-1)*g.q .+ a] = val)
-Base.setindex!(g::DCAgraph, val, i, a::Colon) = (g.h[(i .-1)*g.q .+ (1:g.q)] = val)
+Base.setindex!(g::DCAgraph, val, i, a::Colon) = (g.h[(i .-1)*g.q .+ (1:g.q)] .= val)
+Base.setindex!(g::DCAgraph, val, i::Colon, a) = (g.h[(0:g.L-1)*g.q .+ a] .= val)
+Base.setindex!(g::DCAgraph, val, i::Colon, a::Colon) = (g.h[:] .= val)

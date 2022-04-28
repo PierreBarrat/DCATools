@@ -164,26 +164,26 @@ function inferprofile(
     return inferprofile(f1, q, pc=pc, save=save)
 end
 
-"""
-    inferprofile(f1::Array{Float64,1}, q; pc = 1e-5, save::String="")
+# """
+#     inferprofile(f1::Array{Float64,1}, q; pc = 1e-5, save::String="")
 
-Infer profile model from frequencies `f1`. 
+# Infer profile model from frequencies `f1`.
 
-Keywords:
--`pc`: Pseudocount ratio. Defaults to `1e-5`.
-- save: File to save inferred profile. Format of save is `mat`, readable by `readdlm` or `readparam`. 
-"""
-function inferprofile(f1::Array{Float64,1}, q; pc = 1e-5, save="")
-    L = Int(size(f1,1)/q)
-    h = log.((1-pc)*f1 .+ pc/q)
-    for i in 1:L
-        h[(i-1)*q .+ (1:q)] .-= mean(h[(i-1)*q .+ (1:q)])
-    end
-    if save!=""
-        writedlm(outfile, [zeros(L*q,L*q) ; h'], " ")
-    end
-    return DCAgraph(zeros(L*q,L*q), h, L, q)
-end
+# Keywords:
+# -`pc`: Pseudocount ratio. Defaults to `1e-5`.
+# - save: File to save inferred profile.
+# """
+# function inferprofile(f1::Array{Float64,1}, q; pc = 1e-5, save="")
+#     L = Int(size(f1,1)/q)
+#     h = log.((1-pc)*f1 .+ pc/q)
+#     for i in 1:L
+#         h[(i-1)*q .+ (1:q)] .-= mean(h[(i-1)*q .+ (1:q)])
+#     end
+#     if save!=""
+# #         writedlm(outfile, [zeros(L*q,L*q) ; h'], " ") # should use write_graph
+#     end
+#     return DCAgraph(zeros(L*q,L*q), h, L, q)
+# end
 
 
 """

@@ -14,7 +14,7 @@ export DCAgraph
 
 include("global.jl")
 include("inputoutput.jl")
-export readparam, writeparam, readmsanum
+export writeparam, readmsanum
 
 include("alignment_frequencies.jl")
 export pairwise_frequencies, computeweights

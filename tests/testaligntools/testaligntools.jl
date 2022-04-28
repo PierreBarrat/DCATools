@@ -55,7 +55,7 @@ end
 
 # 4. 
 @testset "Weights to be computed and not saved" begin
-	@test_logs (:warn,"both keywords `weights` and `computew` were declared. `weights` ignored.\n") pairwise_frequencies(Yu,computew=true, weights="toto.txt")
+	@test_logs (:warn,"both keywords `weights` and `computew` declared. `weights` ignored.\n") pairwise_frequencies(Yu,computew=true, weights="toto.txt")
 	f1,f2,w = pairwise_frequencies(Yu,computew=true)
 	g1,g2,nw = pairwise_frequencies(Ynu,computew=true)
 	@test f1==fw_1 && f2==fw_2 && g1==fw_1 && g2==fw_2 && w==ww && nw==wnw

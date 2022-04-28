@@ -3,7 +3,7 @@ using DCATools
 using Statistics, Polynomials
 
 q = 21
-g = readparam("testMCMC/parameters_PF01535_mat.txt", q=q)
+g = DCAgraph("testMCMC/parameters_PF01535_mat.txt", :mat; q=q)
 sample_ref = readmsanum("testMCMC/MC_matteo.txt", format=0, header=true)
 f1,f2 = pairwise_frequencies(sample_ref)
 

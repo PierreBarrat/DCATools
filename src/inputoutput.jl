@@ -1,39 +1,37 @@
 """
-	readparam(infile::String ; format="mat", q=0)
+	DCAgraph(infile::AbstractString, format=:extended; q=0)
 
-Read dca parameters from `infile`. Format option can be either 
+Read dca parameters from `infile` into a `DCAgraph` object.
+Format option can be either:
 - `"mcmc"`: `J i j a b val`
 - `"mat"`: One line of `infile` represents the vector `J[i,a][:]`. This is useful for parameters stored in dlm format. Optional argument `q` is needed in this case. 
-Output is of type `DCAgraph`.
 """
-function readparam(infile::String ; format="mat", q=0)
-	if format == "mat"
-		if q==0
-			error("inputoutput.jl - readparam: With \"mat\" option, you need to specify `q`.\n")
-		else
-			(J,h,L) = readparammat(infile,q)
-		end
-	elseif format == "mcmc"
-		(J,h,L,q) = readparammcmc(infile)
+function DCAgraph(infile::AbstractString, format=:extended; q=0)
+	g = if format == :mat
+		@assert q > 0 "With `:mat` option, you need to specify `q`. Received q=$q"
+		J, h, L = read_graph_matrix(infile, q)
+		DCAgraph(J, h, L, q)
+	elseif format == :extended
+		read_graph_extended(infile)
 	else
-		error("inputoutput.jl - readparam: Unrecognized format argument.\n")
+		error("Unrecognized format argument. Options are `:extended` or `:mat`.\n")
 	end
-	return DCAgraph(J,h,L,q)
+	return g
 end
 
 
 """
-    readparammat(infile::String, q::Int64)
+    read_graph_matrix(infile::AbstractString, q::Int)
 
 Reads potts parameters in dlm format (*ie* stored as a matrix, with h being the last line).  
 Output `J`,`h` and `L`. 
 """
-function readparammat(infile::String, q::Int64)
+function read_graph_matrix(infile::AbstractString, q::Int)
     f = open(infile)
     try 
     	J::Array{Float64,2} = readdlm(f,Float64)
     catch err
-    	println("inputoutput.jl - readparammat: error when attempting to dlmread file $infile\n")
+    	println("error when attempting to dlmread file $infile\n")
     	error("$err")
     end
     close(f)
@@ -42,62 +40,88 @@ function readparammat(infile::String, q::Int64)
 
     # Checking for size 
     if size(h,1)%q != 0
-    	error("inputoutput.jl - readparammat: Incorrect file size ; q=$q, number of cols=$(size(h,1))\n")
+    	error("Incorrect file size ; q=$q, number of cols=$(size(h,1))\n")
 	else
-		L = Int64(size(h,1)/q)
+		L = Int(size(h,1)/q)
 	end
     return (J,h,L)
 end
 
-"""
-	readparammcmc(infile::String)
+function read_graph_extended(file)
+	## Go through file twice: first to get L and q, the second to store parameters
+	format = 1
+	q = 0
+	L = 0
+	for line in eachline(file)
+		@assert is_valid_line(line) "Format problem with line $line"
+		if !isempty(line) && line[1] == 'h'
+			i, a, val = parse_field_line(line)
+			if i > L
+				L = i
+			end
+			if a > q
+				q = a
+			end
+			if i == 0 || q == 0
+				format = 0
+			end
+		end
+	end
+	if format == 0
+		L += 1
+		q += 1
+	end
 
-Read potts parameters in mcmc format: `J i j a b value` or `h i a value`. 
-Output `J`, `h` and `L`.
-"""
-function readparammcmc(infile::String)
-	lines = open(infile) do f 
-		lines = readlines(f)
-	end	
-
-	## Strategy
-	# 1. Get lines starting with h
-	# 2. Retrieve value for `L` and `q` with those. 
-	hlines = lines[findall(m->m!=nothing,map(x->match(r"^h",x),lines))] # step 1
-	L = findmax(map(l->Meta.parse(split(l," ")[2]),hlines))[1]+1 # step 2 for `L`
-	q = findmax(map(l->Meta.parse(split(l," ")[3]),hlines))[1]+1 # step 2 for `q`
-
-	## Now we can attribute memory
 	J = zeros(Float64, L*q, L*q)
 	h = zeros(Float64, L*q)
-	# i = 0
-	# j = 0
-	# a = 0
-	# b = 0
-	for l in lines
-		x = readdlm(IOBuffer(l[2:end]))
-        v = x[end]
-        x = convert(Array{Int64,1},x[1:end-1]) .+ 1
-            if in('h',l)
-                h[(x[1]-1)*q + x[2]] = v
-            elseif in('J',l)
-                J[(x[1]-1)*q + x[3], (x[2]-1)*q + x[4]] = v
-                J[(x[2]-1)*q + x[4], (x[1]-1)*q + x[3]] = v
-            end
-	end 
-	return (J,h,L,q)
+	g = DCAgraph(J, h, L, q)
+	for line in eachline(file)
+		if line[1] == 'J'
+			i, j, a, b, val = parse_coupling_line(line)
+			format == 1 ? (g[i, j, a, b] = val) : (g[i+1, j+1, a+1, b+1] = val)
+		elseif line[1] == 'h'
+			i, a, val = parse_field_line(line)
+			format == 1 ? (g[i, a] = val) : (g[i+1, a+1] = val)
+		end
+	end
+
+	return g
+end
+
+function is_valid_line(line)
+	if isnothing(match(r"J [0-9]+ [0-9]+ [0-9]+ [0-9]+", line)) &&
+		isnothing(match(r"h [0-9]+ [0-9]+", line))
+		return false
+	else
+		return true
+	end
+end
+function parse_field_line(line)
+	s = split(line, " ")
+	i = parse(Int, s[2])
+	a = parse(Int, s[3])
+	val = parse(Float64, s[4])
+	return i, a, val
+end
+function parse_coupling_line(line)
+	s = split(line, " ")
+	i = parse(Int, s[2])
+	j = parse(Int, s[3])
+	a = parse(Int, s[4])
+	b = parse(Int, s[5])
+	val = parse(Float64, s[6])
+	return i, j, a, b, val
 end
 
 
-
 """
-	writeparam(outfile::String, g::DCAgraph; format="mat")
+	writeparam(outfile::AbstractString, g::DCAgraph; format="mat")
 
 Write graph `g` to file `outfile`: 
 - as a matrix if `format=="mat"`
 - using `J i j a b value` if `format=="mcmc"`
 """
-function writeparam(outfile::String, g::DCAgraph; format="mat")
+function writeparam(outfile::AbstractString, g::DCAgraph; format="mat")
 	if format == "mat"
 		writedlm(outfile, [round.(g.J, digits = 5) ; round.(g.h', digits = 5)], " ")
 	elseif format == "mcmc"
@@ -109,11 +133,11 @@ end
 
 
 """
-	writeparammcmc(outfile::String, g::DCAgraph)
+	writeparammcmc(outfile::AbstractString, g::DCAgraph)
 
 Write graph `g` to file `outfile` using format `J i j a b value`.
 """
-function writeparammcmc(outfile::String, g::DCAgraph)
+function writeparammcmc(outfile::AbstractString, g::DCAgraph)
 	f = open(outfile, "w")
 	for i in 1:g.L
 		for j in (i+1):g.L
@@ -135,20 +159,20 @@ end
 
 
 """
-	readmsanum(infile::String ; format=1, header=false)
+	readmsanum(infile::AbstractString ; format=1, header=false)
 
 Read an MSA stored in `infile` in a numerical format. 
 
 If `format=1`, amino acids should be mapped from 1 to `q`. If `format=0`, they should be mapped from 0 to `q-1`.
 `header` argument allows for discarding the first line of `infile`. 
 """
-function readmsanum(infile::String ; format=1, header=false)
+function readmsanum(infile::AbstractString ; format=1, header=false)
 	Y = Array{Float64,2}(undef,0,0)
 	try 
 		if header
-			Y = readdlm(infile, Int64, skipstart=1)
+			Y = readdlm(infile, Int, skipstart=1)
 		else
-			Y = readdlm(infile, Int64)
+			Y = readdlm(infile, Int)
 		end	
 	catch err
 		println("inputoutput.jl - readmsanum: readdlm failed on file $infile. The alignment may not be of the correct format.")
