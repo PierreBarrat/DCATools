@@ -217,7 +217,7 @@ Autocorrelation of each variable, corresponding to columns `sample`, as a functi
 function autocorr(sample::Array{Int64,2}, q::Int64)
 	(M,L) = size(sample)
 	navmin = M-25
-	f1 = computefreqs(sample)[1]
+	f1 = pairwise_frequencies(sample)[1]
 	null = vec(sum(reshape(f1,q,L).^2, dims=1)')
 
 	ac = zeros(Float64, M-navmin, L)

@@ -1,9 +1,3 @@
-###
-
-
-export readparam, writeparam, readmsanum
-
-###
 """
 	readparam(infile::String ; format="mat", q=0)
 

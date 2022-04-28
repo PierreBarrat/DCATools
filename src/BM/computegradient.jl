@@ -18,7 +18,7 @@ end
 Compute gradient corresponding to difference between pairwise frequencies measured in `sample` and targets `f1` and `f2`. Modify input `grad` in order to avoid allocation. Step size are set to 0.
 """
 function computegradient!(grad::DCAgrad, sample::Array{Int64,2}, f1::Array{Float64,1}, f2::Array{Float64,2})
-	p1, p2 = computefreqs(sample)
+	p1, p2 = pairwise_frequencies(sample)
 	grad.gradJ = f2-p2
 	grad.gradh = f1-p1
 	grad.stepJ .*= 0
@@ -32,7 +32,7 @@ end
 Compute gradient corresponding to difference between pairwise frequencies measured in `sample` and targets `f1` and `f2`. Allocate a new `DCAgrad` object. Step size are set to 0.
 """
 function computegradient(sample::Array{Int64,2}, f1::Array{Float64,1}, f2::Array{Float64,2}, q::Int64)
-	p1, p2 = computefreqs(sample)
+	p1, p2 = pairwise_frequencies(sample)
 	L = size(sample,2)
 
 	grad = DCAgrad(L,q)

@@ -17,7 +17,7 @@ g = DCAgraph(J,h,N,q)
 g0 = deepcopy(g)
 glg = deepcopy(g)
 switchgauge!(g0)
-switchgauge!(glg, gauge="lg")
+switchgauge!(glg, gauge=:lg)
 
 @testset "0-sum gauge" begin
 	@test isapprox(sum(g0.J), 0., atol = 1e-12)

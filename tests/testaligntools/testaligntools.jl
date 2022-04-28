@@ -31,8 +31,8 @@ Ynu = readmsanum("testaligntools/msa_n3q2_nonunique.txt")
 
 # 1.
 @testset "No weights" begin
-	f1,f2 = computefreqs(Yu)
-	g1,g2 = computefreqs(Ynu)
+	f1,f2 = pairwise_frequencies(Yu)
+	g1,g2 = pairwise_frequencies(Ynu)
 	@test f1 == fw_1
 	@test f2 == fw_2
 	@test g1 == fnw_1
@@ -41,43 +41,43 @@ end
 
 # 2. 
 @testset "Weights passed as array" begin
-	f1,f2 = computefreqs(Yu,weights=ww)
-	g1,g2 = computefreqs(Ynu,weights=wnw)
+	f1,f2 = pairwise_frequencies(Yu,weights=ww)
+	g1,g2 = pairwise_frequencies(Ynu,weights=wnw)
 	@test f1==fw_1 && f2==fw_2 && g1==fw_1 && g2==fw_2
 end
 
 # 3. 
 @testset "Weights passed as file" begin
-	f1,f2 = computefreqs(Yu,weights="testaligntools/weights_w.txt")
-	g1,g2 = computefreqs(Ynu,weights="testaligntools/weights_nw.txt")
+	f1,f2 = pairwise_frequencies(Yu,weights="testaligntools/weights_w.txt")
+	g1,g2 = pairwise_frequencies(Ynu,weights="testaligntools/weights_nw.txt")
    	@test f1==fw_1 && f2==fw_2 && g1==fw_1 && g2==fw_2
 end
 
 # 4. 
 @testset "Weights to be computed and not saved" begin
-	@test_logs (:warn,"alignmenttools.jl - computefreqs: both keywords `weights` and `computew` were declared. `weights` ignored.\n") computefreqs(Yu,computew=true, weights="toto.txt")
-	f1,f2,w = computefreqs(Yu,computew=true)
-	g1,g2,nw = computefreqs(Ynu,computew=true)
+	@test_logs (:warn,"both keywords `weights` and `computew` were declared. `weights` ignored.\n") pairwise_frequencies(Yu,computew=true, weights="toto.txt")
+	f1,f2,w = pairwise_frequencies(Yu,computew=true)
+	g1,g2,nw = pairwise_frequencies(Ynu,computew=true)
 	@test f1==fw_1 && f2==fw_2 && g1==fw_1 && g2==fw_2 && w==ww && nw==wnw
 end
 
 # 5. 
 @testset "Weights to be computed and saved" begin
-	f1,f2,w = computefreqs(Yu,computew=true, saveweights="testaligntools/testsave_ww.txt")
-	g1,g2,nw = computefreqs(Ynu,computew=true, saveweights="testaligntools/testsave_nw.txt")
+	f1,f2,w = pairwise_frequencies(Yu,computew=true, saveweights="testaligntools/testsave_ww.txt")
+	g1,g2,nw = pairwise_frequencies(Ynu,computew=true, saveweights="testaligntools/testsave_nw.txt")
 	@test f1==fw_1 && f2==fw_2 && g1==fw_1 && g2==fw_2 && w==ww && nw==wnw
 end
 
 # 6.
 @testset "With alignment file 1." begin
-	f1,f2 = computefreqs("testaligntools/msa_n3q2_unique.txt")
-	g1,g2 = computefreqs("testaligntools/msa_n3q2_nonunique.txt")
+	f1,f2 = pairwise_frequencies("testaligntools/msa_n3q2_unique.txt")
+	g1,g2 = pairwise_frequencies("testaligntools/msa_n3q2_nonunique.txt")
 	@test f1==fw_1 && f2==fw_2 && g1==fnw_1 && g2==fnw_2
 end
 
 # 7.
 @testset "With alignment file 2." begin
-	f1,f2, w = computefreqs("testaligntools/msa_n3q2_unique.txt",computew=true, saveweights="testaligntools/testsave_ww.txt")
-	g1,g2, nw = computefreqs("testaligntools/msa_n3q2_nonunique.txt",computew=true, saveweights="testaligntools/testsave_nw.txt")
+	f1,f2, w = pairwise_frequencies("testaligntools/msa_n3q2_unique.txt",computew=true, saveweights="testaligntools/testsave_ww.txt")
+	g1,g2, nw = pairwise_frequencies("testaligntools/msa_n3q2_nonunique.txt",computew=true, saveweights="testaligntools/testsave_nw.txt")
 	@test f1==fw_1 && f2==fw_2 && g1==fw_1 && g2==fw_2 && w==ww && nw==wnw
 end

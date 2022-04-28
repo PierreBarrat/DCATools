@@ -1,6 +1,3 @@
-export PPV, Fapc
-
-
 """
     PPV(scores::Array{Float64,2}, distances::Array{Float64,2} ; minrange=4, threshold=8)
 

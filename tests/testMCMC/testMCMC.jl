@@ -5,10 +5,10 @@ using Statistics, Polynomials
 q = 21
 g = readparam("testMCMC/parameters_PF01535_mat.txt", q=q)
 sample_ref = readmsanum("testMCMC/MC_matteo.txt", format=0, header=true)
-f1,f2 = computefreqs(sample_ref)
+f1,f2 = pairwise_frequencies(sample_ref)
 
 sample_test = doMCMC(g, 5_000, 5)
-p1,p2 = computefreqs(sample_ref)
+p1,p2 = pairwise_frequencies(sample_ref)
 
 @testset "Correlation/slope of frequencies" begin
 	P1 = fit(f1,p1,1)

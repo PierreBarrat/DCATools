@@ -1,7 +1,5 @@
-export switchgauge!, computeenergies, inferprofile, pseudolikelihood
-
 """
-    switchgauge!(g::DCAgraph; gauge=:sum0, col=g.q, wt=Array{Int64,1}(undef,0))
+    switchgauge!(g::DCAgraph; gauge=:sum0, col=g.q, wt=Array{Int,1}(undef,0))
 
 Switch parameters in `g` to gauge `gauge`.
 Implemented gauges:
@@ -11,7 +9,7 @@ Implemented gauges:
 -
 
 """
-function switchgauge!(g::DCAgraph; gauge=:sum0, col=g.q, wt=Array{Int64,1}(undef,0))
+function switchgauge!(g::DCAgraph; gauge=:sum0, col=g.q, wt=Array{Int,1}(undef,0))
     if gauge==:sum0
         g.J,g.h = switchgaugesum0(g.J,g.h,g.L,g.q)
     elseif gauge==:LG || gauge==:lg ||  gauge==:latticegas
@@ -27,11 +25,11 @@ function switchgauge!(g::DCAgraph; gauge=:sum0, col=g.q, wt=Array{Int64,1}(undef
 end
 
 """
-    switchgaugesum0(J::Array{Float64,2}, h::Array{Float64,1}, L::Int64, q::Int64)
+    switchgaugesum0(J, h, L, q)
 
 Switch parameters to 0 sum gauge.
 """
-function switchgaugesum0(J::Array{Float64,2}, h::Array{Float64,1}, L::Int64, q::Int64)
+function switchgaugesum0(J, h, L, q)
     ho = zeros(Float64, L*q)
     Jo = zeros(Float64, L*q, L*q)
     t = zeros(Float64,q,q)
@@ -55,12 +53,12 @@ function switchgaugesum0(J::Array{Float64,2}, h::Array{Float64,1}, L::Int64, q::
 end
 
 """
-    switchgaugeLG(J::Array{Float64,2}, h::Array{Float64,1}, q::Int64 ; col=q)
+    switchgaugeLG(J, h, q ; col=q)
 
 Switch parameters to lattice gas gauge. Keyword `col` indicates the state for which parameters should be 0. Defaults to `q`. 
 """
-function switchgaugeLG(J::Array{Float64,2}, h::Array{Float64,1}, q::Int64 ; col=q)
-    L = Int64(size(J,1)/q)
+function switchgaugeLG(J, h, q; col=q)
+    L = Int(size(J,1)/q)
     ho = zeros(Float64, L*q)
     Jo = zeros(Float64, L*q, L*q)
     t = zeros(Float64,q,q)
@@ -79,10 +77,10 @@ function switchgaugeLG(J::Array{Float64,2}, h::Array{Float64,1}, q::Int64 ; col=
 end
 
 """
-    switchgaugeWT(J::Array{Float64,2}, h::Array{Float64,1}, wt::Array{Int64,1})
+    switchgaugeWT(J, h, wt::Array{Int,1})
 """
-function switchgaugeWT(J::Array{Float64,2}, h::Array{Float64,1}, wt::Array{Int64,1}, q::Int64)
-    L = Int64(size(J,1)/q)
+function switchgaugeWT(J, h, wt, q)
+    L = Int(size(J,1)/q)
     ho = zeros(Float64, L*q)
     Jo = zeros(Float64, L*q, L*q)
     t = zeros(Float64,q,q)
@@ -117,11 +115,11 @@ end
 
 
 """
-    computeenergies(g::DCAgraph, sample::Array{Int64,2})
+    computeenergies(g::DCAgraph, sample::Array{Int,2})
 
 Compute energies of all configurations in `sample` with graph `g`.
 """
-function computeenergies(g::DCAgraph, sample::Array{Int64,2})
+function computeenergies(g::DCAgraph, sample::Array{Int,2})
 
     (M,L) = size(sample)
     energies = zeros(Float64, M)
@@ -137,33 +135,39 @@ function computeenergies(g::DCAgraph, sample::Array{Int64,2})
 end
 
 """
-    computeenergies(g::DCAgraph, sample::Array{Int64,1})
+    computeenergies(g::DCAgraph, sample::Array{Int,1})
 
 Compute energies of all configurations in `sample` with graph `g`.
 """
-function computeenergies(g::DCAgraph, sample::Array{Int64,1})
+function computeenergies(g::DCAgraph, sample::Array{Int,1})
     return computeenergies(g,reshape(sample, 1, length(sample)))[1]
 end
 
 
 """
-    inferprofile(Y::Array{Int64,2}; q=findmax(Y)[1], pc = 1e-5, weights=[], save::String="")
+    inferprofile(Y::Array{Int,2}; q=findmax(Y)[1], pc = 1e-5, weights=[], save::String="")
 
 Infer profile model from alignment `Y`. 
 
 Keywords:
 - `q`: Default to maximum value in `Y`. 
 -`pc` and `save`: See `inferprofile`. 
-- `weights`: see `computefreqs`
+- `weights`: see `pairwise_frequencies`
 - 
 """
-function inferprofile(msa::Array{Int64,2}; q=findmax(msa)[1], pc = 1e-5, weights="", save::String="")
-    f1 = computefreqs(msa, q=q, weights=weights)[1]
+function inferprofile(
+	msa::Array{Int,2};
+	q=findmax(msa)[1],
+	pc = 1e-5,
+	weights="",
+	save=""
+)
+    f1 = pairwise_frequencies(msa, q=q, weights=weights)[1]
     return inferprofile(f1, q, pc=pc, save=save)
 end
 
 """
-    inferprofile(f1::Array{Float64,1}, q::Int64; pc = 1e-5, save::String="")
+    inferprofile(f1::Array{Float64,1}, q; pc = 1e-5, save::String="")
 
 Infer profile model from frequencies `f1`. 
 
@@ -171,8 +175,8 @@ Keywords:
 -`pc`: Pseudocount ratio. Defaults to `1e-5`.
 - save: File to save inferred profile. Format of save is `mat`, readable by `readdlm` or `readparam`. 
 """
-function inferprofile(f1::Array{Float64,1}, q::Int64; pc = 1e-5, save::String="")
-    L = Int64(size(f1,1)/q)
+function inferprofile(f1::Array{Float64,1}, q; pc = 1e-5, save="")
+    L = Int(size(f1,1)/q)
     h = log.((1-pc)*f1 .+ pc/q)
     for i in 1:L
         h[(i-1)*q .+ (1:q)] .-= mean(h[(i-1)*q .+ (1:q)])
@@ -185,11 +189,14 @@ end
 
 
 """
-    pseudolikelihood(Y::Array{Int64,2}, g::DCAgraph; weights=ones(size(Y,1)))
+    pseudolikelihood(Y, g::DCAgraph; weights=ones(size(Y,1)))
 
 Compute the pseudo-likelihood of configurations (*ie* sequences) in `Y` according to parameters in `g`. 
 """
-function pseudolikelihood(Y::Array{Int64,2}, g::DCAgraph ;  weights::Array{Float64,1}=ones(Float64,size(Y,1)))
+function pseudolikelihood(
+	Y, g::DCAgraph;
+	weights=ones(Float64,size(Y,1))
+)
     (M,L) = size(Y)
     Yi = Y'
 

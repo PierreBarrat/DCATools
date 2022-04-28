@@ -1,5 +1,3 @@
-export fitquality, threepointscor, corr3p, projseq, linreg
-
 """
     fitquality(f2_1::Array{Float64,2}, f1_1::Array{Float64,1}, f2_2::Array{Float64,2}, f1_2::Array{Float64,1}, q::Int64; withdiag=false)
 
@@ -71,7 +69,7 @@ Base routine. Compute three body correlations between columns of alignment `Y`, 
 function threepointscor(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64, threshold::Float64)
     (M,L) = size(Y)
     Meff = sum(w)
-    @time (f1,f2) = computefreqs(Y,w,q)
+    @time (f1,f2) = pairwise_frequencies(Y,w,q)
 
     c3p = Array{corr3p,1}(undef, 0)
     ff3 = zeros(Float64, q*q*q) # Will contain 3p frequencies for triplet (i,j,k)
@@ -124,7 +122,7 @@ Base routine. Compute three body correlations between columns of alignment `Y`, 
 function threepointscor(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64, triplets::Array{Int64,2})
     (M,L) = size(Y)
     Meff = sum(w)
-    (f1,f2) = computefreqs(Y,w,q)
+    (f1,f2) = pairwise_frequencies(Y,w,q)
 
     K = size(triplets,1)
     c3p = Array{corr3p,1}(undef,0)
