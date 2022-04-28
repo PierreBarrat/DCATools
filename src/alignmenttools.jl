@@ -1,11 +1,11 @@
 export computefreqs, computeweights, pdist, convert_fasta
 
 """
-    computefreqs(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
+    computefreqs(Y::Matrix{<:Integer}, w::Array{Float64,1}, q::Integer)
 
 Base routine for computing frequencies in sample `Y`. `w` is an array containing the weights.
 """
-function computefreqs(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
+function computefreqs(Y::Matrix{<:Integer}, w::Array{Float64,1}, q::Integer)
     if typeof(w)==Array{Float64,2}
         @warn("alignmenttools.jl - computefreqs: `w` is of dimension 2. Applying `vec`.")
         w = vec(w)
@@ -39,7 +39,7 @@ end
 
 
 """
-    computefreqs(Y::Array{Int64,2}; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", pc=0.)
+    computefreqs(Y::Matrix{<:Integer}; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", pc=0.)
 
 Compute pairwise frequencies for an array input. `Y` is an array of `Int64`. Return frequencies `f1` and `f2` and weights.
 
@@ -50,7 +50,7 @@ Keywords:
 - `saveweights` and `theta`: see `computeweights`.
 - `pc`: default 0. Pseudocount ratio.
 """
-function computefreqs(Y::Array{Int64,2}; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", pc=0.)
+function computefreqs(Y::Matrix{<:Integer}; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", pc=0.)
     w = Array{Float64,1}(undef, 0)
     if computew
         # compute weights
@@ -134,7 +134,7 @@ function computeweights(msa::String; theta::Float64 = 0.2, saveweights::String =
 end
 
 """
-    computeweights(Y::Array{Int64,2} ; theta = 0.2, saveweights="")
+    computeweights(Y::Matrix{<:Integer} ; theta = 0.2, saveweights="")
 
 Compute weights for array input. Compute weights of each sequence in file `msa` using reweighting threshold `theta` (default 0.2).
 
@@ -142,7 +142,7 @@ Keywords:
 - `theta`: threshold of similarity under which sequences are weighted down. Default `0.2`.
 - `saveweights`: weights are saved there if non empty. Default `""`
 """
-function computeweights(Y::Array{Int64,2} ; theta = 0.2, saveweights="")
+function computeweights(Y::Matrix{<:Integer} ; theta = 0.2, saveweights="")
     w = computeweights(Y, theta)
     if saveweights!=""
         writedlm(saveweights,w," ")
@@ -151,11 +151,11 @@ function computeweights(Y::Array{Int64,2} ; theta = 0.2, saveweights="")
 end
 
 """
-    computeweights(Y::Array{Int64,2},theta::Float64)
+    computeweights(Y::Matrix{<:Integer},theta::Float64)
 
 Basic routine. Compute weights of sequences in alignment `Y`, using threshold `theta`.
 """
-function computeweights(Y::Array{Int64,2}, theta::Float64)
+function computeweights(Y::Matrix{<:Integer}, theta::Float64)
     Y = Y';
     M::Int64 = size(Y,2)
     L::Int64 = size(Y,1)
@@ -178,11 +178,11 @@ function computeweights(Y::Array{Int64,2}, theta::Float64)
 end
 
 """
-    pdist(Y::Array{Int64,2})
+    pdist(Y::Matrix{<:Integer})
 
 Pairwise hamming distance between sequences in lines of `Y`.
 """
-function pdist(Y::Array{Int64,2})
+function pdist(Y::Matrix{<:Integer})
     M = size(Y,1)
     Yt = Y'
     out = zeros(Int64, M, M)
@@ -220,11 +220,11 @@ function convert_seq(s::String, mapping = DEFAULT_AA_MAPPING)
 end
 
 """
-    compute_profile(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
+    compute_profile(Y::Matrix{<:Integer}, w::Array{Float64,1}, q::Integer)
 
 Base routine for computing profile in sample `Y`. `w` is an array containing the weights.
 """
-function compute_profile(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
+function compute_profile(Y::Matrix{<:Integer}, w::Array{Float64,1}, q::Integer)
     if typeof(w)==Array{Float64,2}
         @warn("`w` is of dimension 2. Applying `vec`.")
         w = vec(w)
@@ -247,7 +247,7 @@ function compute_profile(Y::Array{Int64,2}, w::Array{Float64,1}, q::Int64)
     return f1
 end
 """
-    compute_profile(Y::Array{Int64,2}; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", pc=0.)
+    compute_profile(Y::Matrix{<:Integer}; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", pc=0.)
 
 Compute single site frequencies for an array input. `Y` is an array of `Int64`. Return frequencies `f1` and weights.
 
@@ -258,7 +258,7 @@ Keywords:
 - `saveweights` and `theta`: see `computeweights`.
 - `pc`: default 0. Pseudocount ratio.
 """
-function compute_profile(Y::Array{Int64,2}; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", pc=0.)
+function compute_profile(Y::Matrix{<:Integer}; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", pc=0.)
     w = Array{Float64,1}(undef, 0)
     if computew
         # compute weights

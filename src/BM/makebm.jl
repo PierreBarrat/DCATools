@@ -13,9 +13,6 @@ function writelog(logname::String, bmlog::BMlog)
 	ff = open(logname,"a")
 	outstring = @sprintf("%d    %d    %.4f    %.4f    %.4f    %.4f    %.4f    %.4f    %.4f    %.4f    %.4f\n",bmlog.samplesize,bmlog.tau, bmlog.gradnorm, bmlog.gradnormh, bmlog.gradnormJ, bmlog.gradconsth, bmlog.gradconstJ, bmlog.corcor, bmlog.slopecor, bmlog.cormag, bmlog.cormutants)
 	write(ff, outstring)
-	# write(ff, "$(bmlog.samplesize)\t$(bmlog.tau)\t$(bmlog.gradnorm)\t$(bmlog.gradnormh)\t$(bmlog.gradnormJ)\t$(bmlog.gradconsth)\t$(bmlog.gradconstJ)")
-	# write(ff, "\t$(bmlog.corcor)\t$(bmlog.slopecor)\t$(bmlog.cormag)")
-	# write(ff, "\n")
 	close(ff)
 end
 """
@@ -46,18 +43,26 @@ function writeinfo(infofile::String, meta::BMmeta, ginit::Bool, mutants::Bool)
 end
 
 """
-	bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64;
-			ginit::DCAgraph = DCAgraph(L,q), gradinit=DCAgrad(L, q), mutants::MutData = MutData(),
-			kwargs...)
+	bmlearn(
+		f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64;
+		ginit::DCAgraph = DCAgraph(L,q),
+		gradinit=DCAgrad(L, q),
+		mutants::MutData = MutData(),
+		kwargs...
+	)
 
 Learn a Boltzmann machine with target frequencies `f1` and `f2`. `L` and `q` are the length of sequences and number of characters of the alphabet. 
 `ginit` provides a starting point for the BM. If provided, `mutants::MutData` will be used to integrate mutational information (*e.g.* from a deep mutational scan). 
 
 Parameters guiding the learning process are provided as additional keyword arguments and passed to `BMmeta`. See `?BMmeta` for help. 
 """
-function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64;
-			ginit::DCAgraph = DCAgraph(L,q), gradinit=DCAgrad(L, q), mutants::MutData = MutData(),
-			kwargs...)
+function bmlearn(
+	f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64;
+	ginit::DCAgraph = DCAgraph(L,q),
+	gradinit=DCAgrad(L, q),
+	mutants::MutData = MutData(),
+	kwargs...
+)
 	try 
 		BMmeta(;kwargs...)
 	catch err
@@ -73,13 +78,22 @@ end
 """
 function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64, meta::BMmeta;
 	ginit::DCAgraph = DCAgraph(L,q), gradinit=DCAgrad(L, q), mutants::MutData = MutData())
-	
+	# log / info flags
+	woutput = (meta.savefolder != "")
+
 	# Initializing save directory
-	mkpath(meta.savefolder)
+	meta.savefolder != "" && mkpath(meta.savefolder)
 	logfile = "$(meta.savefolder)/$(meta.logfile)"
 
 	# Writing info about run
-	writeinfo("$(meta.savefolder)/$(meta.infofile)", meta, ginit!=DCAgraph(L,q), !isempty(mutants.mutant))
+	if woutput
+		writeinfo(
+			"$(meta.savefolder)/$(meta.infofile)",
+			meta,
+			ginit != DCAgraph(L,q),
+			!isempty(mutants.mutant)
+		)
+	end
 
 	# Setting verbosity
 	set_verbose(meta.verbose)
@@ -102,7 +116,7 @@ function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64,
 	# end
 
 	# Header for meta.logfile
-	writelog(logfile)
+	woutput && writelog(logfile)
 
 	for it in 1:meta.nit
 		if mod(it,meta.update_tau) == 1
@@ -111,10 +125,10 @@ function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64,
 		cgrad = bmstep!(g, f1, f2, md, cgrad, meta, bmlog)
 		v() && println(" --- It. $it out of $(meta.nit) ---")
 		v() && println("Norm of gradient: $(bmlog.gradnorm)")
-		writelog(logfile, bmlog)
-		if mod(it, meta.saveparam)==0 && meta.savefolder!=""
+		woutput && writelog(logfile, bmlog)
+		if woutput && mod(it, meta.saveparam)==0 && meta.savefolder!=""
 			writeparam("$(meta.savefolder)/DCABM_it$(it)_mat.txt", g, format="mat")
-		elseif mod(it, meta.saveparam)==0
+		elseif woutput && mod(it, meta.saveparam)==0
 			writeparam("DCABM_it$(it)_mat.txt", g, format="mat")
 		end
 	end

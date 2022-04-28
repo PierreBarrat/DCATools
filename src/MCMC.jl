@@ -114,7 +114,8 @@ function samplefromgraph!(conf::Array{Int64,1}, jdx::Array{UInt16,1}, g::DCAgrap
 	L = g.L
 
 	@fastmath @inbounds for t in 1:tau
-		for i in 1:L
+		for it in 1:L
+			i = rand(1:L)
 			a = conf[i]
 			b = rand(1:g.q)
 			while b==a

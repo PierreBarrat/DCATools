@@ -98,7 +98,7 @@ Meta parameters for the BM learning. Those are never modified in the course of t
 - `logfile::String = "log.txt"`: store log of bmlearn
 - `infofile::String = "info.txt"`: store information about bmlearn run
 - `comment::String = ""`: comment to be stored in `infofile`. 
-- `savefolder::String = "./"`: created before running
+- `savefolder::String = "./"`: created at runtime. Set to `""` for no file output.
 ### Misc. 
 - `nit::Int64 = 50`: number of iterations
 - `nprocs::Int64 = 1`: parallel MCMC is used if `nprocs>1` (not working super well if I remember correctly).
