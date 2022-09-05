@@ -6,7 +6,7 @@ using Printf
 using Random
 using Statistics
 
-import Base: *, getindex, setindex!, size
+import Base: *, getindex, setindex!, size, write
 
 
 include("objects.jl")

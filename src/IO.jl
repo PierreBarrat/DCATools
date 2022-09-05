@@ -4,17 +4,17 @@
 Read dca parameters from `infile` into a `DCAGraph` object.
 Format option can be either:
 - `:extended`: `J i j a b val`
-- `:matrix`: One line of `infile` represents the vector `J[i,a][:]`. This is useful for parameters stored in dlm format. Optional argument `q` is needed in this case.
+- `:matrix`: One line of `infile` represents the vector `J[i,a][:]`.
+	This is useful for parameters stored in dlm format. Optional argument `q` is needed in this case.
 """
 function DCAGraph(infile::AbstractString, format=:extended; q=0)
 	g = if format == :matrix
-		@assert q > 0 "With `:mat` option, you need to specify `q`. Received q=$q"
-		J, h, L = read_graph_matrix(infile, q)
-		DCAGraph(J, h, L, q)
+		@assert q > 0 "With `:matrix` option, you need to specify `q`. Got q=$q"
+		read_graph_matrix(infile, q)
 	elseif format == :extended
 		read_graph_extended(infile)
 	else
-		error("Unrecognized format argument. Options are `:extended` or `:mat`.\n")
+		error("Unrecognized format argument. Options are `:extended` or `:matrix`.\n")
 	end
 	return g
 end
@@ -44,14 +44,15 @@ function read_graph_matrix(file::AbstractString, q::Int)
 	else
 		L = Int(size(h,1)/q)
 	end
-    return (J,h,L)
+    return DCAGraph(;J, h, L, q)
 end
 
 function read_graph_extended(file)
 	## Go through file twice: first to get L and q, the second to store parameters
-	format = 1
 	q = 0
 	L = 0
+	min_idx = Inf
+	index_style = 1
 	for line in eachline(file)
 		@assert is_valid_line(line) "Format problem with line:\n $line \n--> Expected `J i j a b` or `h i a`."
 		if !isempty(line) && line[1] == 'h'
@@ -62,26 +63,32 @@ function read_graph_extended(file)
 			if a > q
 				q = a
 			end
-			if i == 0 || q == 0
-				format = 0
+			if i < min_idx || a < min_idx
+				min_idx = min(i, a)
 			end
+			# if i == 0 || q == 0
+			# 	index_style = 0
+			# end
 		end
 	end
-	if format == 0
+	@assert min_idx == 1 || min_idx == 0 "Issue with indexing: smallest index found is $min_idx"
+	index_style = (min_idx == 0 ? 0 : 1)
+	if index_style == 0
 		L += 1
 		q += 1
 	end
 
-	J = zeros(Float64, L*q, L*q)
-	h = zeros(Float64, L*q)
-	g = DCAGraph(J, h, L, q)
+	g = DCAGraph(;L, q)
 	for line in eachline(file)
 		if line[1] == 'J'
 			i, j, a, b, val = parse_coupling_line(line)
-			format == 1 ? (g[i, j, a, b] = val) : (g[i+1, j+1, a+1, b+1] = val)
+			index_style == 0 && (i += 1; j += 1; a += 1; b += 1)
+			g[i, j, a, b] = val
+			g[j, i, b, a] = val
 		elseif line[1] == 'h'
 			i, a, val = parse_field_line(line)
-			format == 1 ? (g[i, a] = val) : (g[i+1, a+1] = val)
+			index_style == 0 && (i += 1; a += 1)
+			g[i, a] = val
 		end
 	end
 
@@ -115,17 +122,24 @@ end
 
 
 """
-	writeparam(outfile::AbstractString, g::DCAGraph; format="mat")
+	write(file::AbstractString, g::DCAGraph, format = :extended; sigdigits=5)
 
-Write graph `g` to file `outfile`: 
-- as a matrix if `format=="mat"`
-- using `J i j a b value` if `format=="mcmc"`
+Write parameters of `g` to `file`:
+- using `J i j a b value` if `format == :extended`
+- as a matrix if `format == :matrix`
 """
-function writeparam(outfile::AbstractString, g::DCAGraph; format="mat")
-	if format == "mat"
-		writedlm(outfile, [round.(g.J, digits = 5) ; round.(g.h', digits = 5)], " ")
-	elseif format == "mcmc"
-		writeparammcmc(outfile,g)
+function write(
+	file::AbstractString, g::DCAGraph, format = :extended;
+	sigdigits=5, index_style=1,
+)
+	if format == :matrix
+		writedlm(
+			file,
+			[round.(g.J, digits = sigdigits) ; round.(g.h', digits = sigdigits)],
+			" ",
+		)
+	elseif format == :extended
+		write_graph_extended(file, g, sigdigits, index_style)
 	else
 		error("inputoutput.jl - writeparam: Unrecognized format argument.\n")
 	end
@@ -133,24 +147,35 @@ end
 
 
 """
-	writeparammcmc(outfile::AbstractString, g::DCAGraph)
+	write_graph_extended(file::AbstractString, g::DCAGraph; sigdigits=5)
 
-Write graph `g` to file `outfile` using format `J i j a b value`.
+Write graph `g` to file `file` using format `J i j a b value`.
 """
-function writeparammcmc(outfile::AbstractString, g::DCAGraph)
-	f = open(outfile, "w")
+function write_graph_extended(file::AbstractString, g::DCAGraph, sigdigits, index_style)
+	@assert index_style == 0 || index_style == 1 "Got `index_style==`$(index_style)"
+	f = open(file, "w")
 	for i in 1:g.L
 		for j in (i+1):g.L
 			for a in 1:g.q
 				for b in 1:g.q
-					write(f, "J $(i-1) $(j-1) $(a-1) $(b-1) $(g.J[(j-1)*g.q+b, (i-1)*g.q+a])\n" )
+					val = round(g[j,i,b,a]; sigdigits)
+					if index_style == 0
+						write(f, "J $(i-1) $(j-1) $(a-1) $(b-1) $val\n")
+					elseif index_style == 1
+						write(f, "J $i $j $a $b $val\n")
+					end
 				end
 			end
 		end
 	end
 	for i in 1:g.L
 		for a in 1:g.q
-			write(f, "h $(i-1) $(a-1) $(g.h[(i-1)*g.q+a])\n" )
+			val = round(g[i,a]; sigdigits)
+			if index_style == 0
+				write(f, "h $(i-1) $(a-1) $val\n" )
+			elseif index_style == 1
+				write(f, "h $i $a $val\n" )
+			end
 		end
 	end
 	close(f)

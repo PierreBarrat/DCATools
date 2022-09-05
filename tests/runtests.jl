@@ -5,9 +5,12 @@ fatalerrors = length(ARGS) > 0 && ARGS[1] == "-f"
 quiet = length(ARGS) > 0 && ARGS[1] == "-q"
 anyerrors = false
 
-my_tests = ["testmodeltools.jl",
-            "testaligntools/testaligntools.jl",
-            "testMCMC/testMCMC.jl"]
+my_tests = [
+	"IO/test.jl",
+	"modeltools/test.jl",
+	"aligntools/test.jl",
+	"MCMC/test.jl",
+]
 println("Running tests:")
 
 for my_test in my_tests
