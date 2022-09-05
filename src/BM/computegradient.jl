@@ -1,20 +1,20 @@
 """
-	updateparameters!(g::DCAgraph, grad::DCAgrad)
+	updateparameters!(g::DCAGraph, grad::DCAGrad)
 
 Add gradient `grad` to graph `g`, modifying it. 
 """
-function updateparameters!(g::DCAgraph, grad::DCAgrad)
+function updateparameters!(g::DCAGraph, grad::DCAGrad)
 	g.J .+= grad.stepJ .* grad.gradJ
 	g.h .+= grad.steph .* grad.gradh
 end
 
 
 """
-	computegradient!(grad::DCAgrad, sample::Array{Int64,2}, f1::Array{Float64,1}, f2::Array{Float64,2})
+	computegradient!(grad::DCAGrad, sample::Array{Int64,2}, f1::Array{Float64,1}, f2::Array{Float64,2})
 
 Compute gradient corresponding to difference between pairwise frequencies measured in `sample` and targets `f1` and `f2`. Modify input `grad` in order to avoid allocation. Step size are set to 0.
 """
-function computegradient!(grad::DCAgrad, sample::Array{Int64,2}, f1::Array{Float64,1}, f2::Array{Float64,2})
+function computegradient!(grad::DCAGrad, sample::Array{Int64,2}, f1::Array{Float64,1}, f2::Array{Float64,2})
 	p1, p2 = pairwise_frequencies(sample)
 	grad.gradJ = f2-p2
 	grad.gradh = f1-p1
@@ -26,13 +26,13 @@ end
 """
 	computegradient(sample::Array{Int64,2}, f1::Array{Float64,1}, f2::Array{Float64,2}, q::Int64)
 
-Compute gradient corresponding to difference between pairwise frequencies measured in `sample` and targets `f1` and `f2`. Allocate a new `DCAgrad` object. Step size are set to 0.
+Compute gradient corresponding to difference between pairwise frequencies measured in `sample` and targets `f1` and `f2`. Allocate a new `DCAGrad` object. Step size are set to 0.
 """
 function computegradient(sample::Array{Int64,2}, f1::Array{Float64,1}, f2::Array{Float64,2}, q::Int64)
 	p1, p2 = pairwise_frequencies(sample)
 	L = size(sample,2)
 
-	grad = DCAgrad(L,q)
+	grad = DCAGrad(L,q)
 	grad.gradJ = f2-p2
 	grad.gradh = f1-p1
 
@@ -45,7 +45,7 @@ end
 Gradient due to differences between measured fitness and energies. Compute differences between energies and fitness over all mutants in `md`. Result is scaled by sample size and by λ. 
 """
 function computegradient(md::MutData, mapping::Dict{Float64, Float64}, meta::BMmeta)
-	grad = DCAgrad(md.L,md.q)
+	grad = DCAGrad(md.L,md.q)
 
 	for mut in md.mutant
 		if size(mut.smut,1) == 1 # gradient on fields
@@ -68,26 +68,26 @@ end
 
 
 """
-	computel2(g::DCAgraph, lambda::Float64)
+	computel2(g::DCAGraph, lambda::Float64)
 
 Return gradient corresponding to l2 regularization. 
 """
-function computel2(g::DCAgraph, lambda::Float64)
+function computel2(g::DCAGraph, lambda::Float64)
 
-	grad = DCAgrad(g.L, g.q)
+	grad = DCAGrad(g.L, g.q)
 	grad.gradJ = -lambda*g.J
 	grad.gradh = -lambda*g.h
 
 	return grad
 end
 """
-	computel2(g::DCAgraph, lambdaJ::Float64, lambdah::Float64)
+	computel2(g::DCAGraph, lambdaJ::Float64, lambdah::Float64)
 
 Return gradient corresponding to l2 regularization. 
 """
-function computel2(g::DCAgraph, lambdaJ::Float64, lambdah::Float64)
+function computel2(g::DCAGraph, lambdaJ::Float64, lambdah::Float64)
 
-	grad = DCAgrad(g.L, g.q)
+	grad = DCAGrad(g.L, g.q)
 	grad.gradJ = -lambdaJ*g.J
 	grad.gradh = -lambdah*g.h
 
@@ -95,14 +95,14 @@ function computel2(g::DCAgraph, lambdaJ::Float64, lambdah::Float64)
 end
 
 """
-	computel1(g::DCAgraph, lambda::Float64)
+	computel1(g::DCAGraph, lambda::Float64)
 
 Return gradient corresponding to l1 regularization. Experimental, should not be used. 
 """
-function computel1!(g::DCAgraph, cgrad::DCAgrad, lambda::Float64)
+function computel1!(g::DCAGraph, cgrad::DCAGrad, lambda::Float64)
 	# If J = 0 and the gradient is smaller than lambda, then J should not move 
 	# Else, if J != 0, add lambda to the gradient
-	grad = DCAgrad(g.L, g.q)
+	grad = DCAGrad(g.L, g.q)
 	eps = lambda
 	for j in 1:g.L
 		for i in 1:g.L
@@ -132,11 +132,11 @@ end
 
 
 """
-	computestepsize!(newgrad::DCAgrad, prevgrad::DCAgrad, meta::BMmeta)
+	computestepsize!(newgrad::DCAGrad, prevgrad::DCAGrad, meta::BMmeta)
 
 Update step size of the gradient descent. For single parameters (i,j,a,b), the difference of sign between the current gradient and the previous one is used. If both are of the same sign, step size is increased. Other wise, it is decreased. 
 """
-function computestepsize!(newgrad::DCAgrad, prevgrad::DCAgrad, meta::BMmeta)
+function computestepsize!(newgrad::DCAGrad, prevgrad::DCAGrad, meta::BMmeta)
 	xJ = (newgrad.gradJ .* prevgrad.gradJ) .>=0
 	newgrad.stepJ .= prevgrad.stepJ .* ((.!xJ * meta.adaptsJdown) + (xJ * meta.adaptsJup))
 	newgrad.stepJ .= min.(newgrad.stepJ, meta.stepJmax)
@@ -148,16 +148,16 @@ end
 
 """
 """
-function gradnorm(grad::DCAgrad)
+function gradnorm(grad::DCAGrad)
 	return sum(grad.gradJ.^2) + sum(grad.gradh.^2), sum(grad.gradh.^2), sum(grad.gradJ.^2)
 end
 
 """
-	gradconst(prevgrad::DCAgrad, newgrad::DCAgrad)
+	gradconst(prevgrad::DCAGrad, newgrad::DCAGrad)
 
 Scalar product between two gradients, normalized by their norms. Defines cosine between the two vectors. 
 """
-function gradconst(prevgrad::DCAgrad, newgrad::DCAgrad)
+function gradconst(prevgrad::DCAGrad, newgrad::DCAGrad)
 	outJ = sum(prevgrad.gradJ .* newgrad.gradJ) / sqrt(sum(newgrad.gradJ.^2) * sum(prevgrad.gradJ.^2))
 	outh = sum(prevgrad.gradh .* newgrad.gradh) / sqrt(sum(newgrad.gradh.^2) * sum(prevgrad.gradh.^2))
 	return outh,outJ

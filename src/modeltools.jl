@@ -1,5 +1,5 @@
 """
-    switchgauge!(g::DCAgraph; gauge=:sum0, col=g.q, wt=Array{Int,1}(undef,0))
+    switchgauge!(g::DCAGraph; gauge=:sum0, col=g.q, wt=Array{Int,1}(undef,0))
 
 Switch parameters in `g` to gauge `gauge`.
 Implemented gauges:
@@ -7,7 +7,7 @@ Implemented gauges:
 - Lattice gas (state `col` has energy 0): `:LG`, `:lg`, `:latticegas`.
 - Wild type (sequence `wt` has energy 0): `:wt`
 """
-function switchgauge!(g::DCAgraph; gauge=:sum0, col=g.q, wt=Array{Int,1}(undef,0))
+function switchgauge!(g::DCAGraph; gauge=:sum0, col=g.q, wt=Array{Int,1}(undef,0))
     if gauge==:sum0
         g.J,g.h = switchgaugesum0(g.J,g.h,g.L,g.q)
     elseif gauge==:LG || gauge==:lg ||  gauge==:latticegas
@@ -113,11 +113,11 @@ end
 
 
 """
-    computeenergies(g::DCAgraph, sample::Array{Int,2})
+    computeenergies(g::DCAGraph, sample::Array{Int,2})
 
 Compute energies of all configurations in `sample` with graph `g`.
 """
-function computeenergies(g::DCAgraph, sample::Array{Int,2})
+function computeenergies(g::DCAGraph, sample::Array{Int,2})
 
     (M,L) = size(sample)
     energies = zeros(Float64, M)
@@ -133,11 +133,11 @@ function computeenergies(g::DCAgraph, sample::Array{Int,2})
 end
 
 """
-    computeenergies(g::DCAgraph, sample::Array{Int,1})
+    computeenergies(g::DCAGraph, sample::Array{Int,1})
 
 Compute energies of all configurations in `sample` with graph `g`.
 """
-function computeenergies(g::DCAgraph, sample::Array{Int,1})
+function computeenergies(g::DCAGraph, sample::Array{Int,1})
     return computeenergies(g,reshape(sample, 1, length(sample)))[1]
 end
 
@@ -182,17 +182,17 @@ end
 #     if save!=""
 # #         writedlm(outfile, [zeros(L*q,L*q) ; h'], " ") # should use write_graph
 #     end
-#     return DCAgraph(zeros(L*q,L*q), h, L, q)
+#     return DCAGraph(zeros(L*q,L*q), h, L, q)
 # end
 
 
 """
-    pseudolikelihood(Y, g::DCAgraph; weights=ones(size(Y,1)))
+    pseudolikelihood(Y, g::DCAGraph; weights=ones(size(Y,1)))
 
 Compute the pseudo-likelihood of configurations (*ie* sequences) in `Y` according to parameters in `g`. 
 """
 function pseudolikelihood(
-	Y, g::DCAgraph;
+	Y, g::DCAGraph;
 	weights=ones(Float64,size(Y,1))
 )
     (M,L) = size(Y)

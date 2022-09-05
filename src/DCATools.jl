@@ -10,10 +10,10 @@ import Base: *, getindex, setindex!, size
 
 
 include("objects.jl")
-export DCAgraph
+export DCAGraph
 
 include("global.jl")
-include("inputoutput.jl")
+include("IO.jl")
 export writeparam, readmsanum
 
 include("alignment_frequencies.jl")

@@ -1,16 +1,16 @@
 """
-	DCAgraph(infile::AbstractString, format=:extended; q=0)
+	DCAGraph(infile::AbstractString, format=:extended; q=0)
 
-Read dca parameters from `infile` into a `DCAgraph` object.
+Read dca parameters from `infile` into a `DCAGraph` object.
 Format option can be either:
-- `"mcmc"`: `J i j a b val`
-- `"mat"`: One line of `infile` represents the vector `J[i,a][:]`. This is useful for parameters stored in dlm format. Optional argument `q` is needed in this case. 
+- `:extended`: `J i j a b val`
+- `:matrix`: One line of `infile` represents the vector `J[i,a][:]`. This is useful for parameters stored in dlm format. Optional argument `q` is needed in this case.
 """
-function DCAgraph(infile::AbstractString, format=:extended; q=0)
-	g = if format == :mat
+function DCAGraph(infile::AbstractString, format=:extended; q=0)
+	g = if format == :matrix
 		@assert q > 0 "With `:mat` option, you need to specify `q`. Received q=$q"
 		J, h, L = read_graph_matrix(infile, q)
-		DCAgraph(J, h, L, q)
+		DCAGraph(J, h, L, q)
 	elseif format == :extended
 		read_graph_extended(infile)
 	else
@@ -21,17 +21,17 @@ end
 
 
 """
-    read_graph_matrix(infile::AbstractString, q::Int)
+    read_graph_matrix(file::AbstractString, q::Int)
 
 Reads potts parameters in dlm format (*ie* stored as a matrix, with h being the last line).  
 Output `J`,`h` and `L`. 
 """
-function read_graph_matrix(infile::AbstractString, q::Int)
-    f = open(infile)
+function read_graph_matrix(file::AbstractString, q::Int)
+    f = open(file)
     try 
     	J::Array{Float64,2} = readdlm(f,Float64)
     catch err
-    	println("error when attempting to dlmread file $infile\n")
+    	println("error when attempting to dlmread file $file\n")
     	error("$err")
     end
     close(f)
@@ -53,7 +53,7 @@ function read_graph_extended(file)
 	q = 0
 	L = 0
 	for line in eachline(file)
-		@assert is_valid_line(line) "Format problem with line $line"
+		@assert is_valid_line(line) "Format problem with line:\n $line \n--> Expected `J i j a b` or `h i a`."
 		if !isempty(line) && line[1] == 'h'
 			i, a, val = parse_field_line(line)
 			if i > L
@@ -74,7 +74,7 @@ function read_graph_extended(file)
 
 	J = zeros(Float64, L*q, L*q)
 	h = zeros(Float64, L*q)
-	g = DCAgraph(J, h, L, q)
+	g = DCAGraph(J, h, L, q)
 	for line in eachline(file)
 		if line[1] == 'J'
 			i, j, a, b, val = parse_coupling_line(line)
@@ -115,13 +115,13 @@ end
 
 
 """
-	writeparam(outfile::AbstractString, g::DCAgraph; format="mat")
+	writeparam(outfile::AbstractString, g::DCAGraph; format="mat")
 
 Write graph `g` to file `outfile`: 
 - as a matrix if `format=="mat"`
 - using `J i j a b value` if `format=="mcmc"`
 """
-function writeparam(outfile::AbstractString, g::DCAgraph; format="mat")
+function writeparam(outfile::AbstractString, g::DCAGraph; format="mat")
 	if format == "mat"
 		writedlm(outfile, [round.(g.J, digits = 5) ; round.(g.h', digits = 5)], " ")
 	elseif format == "mcmc"
@@ -133,11 +133,11 @@ end
 
 
 """
-	writeparammcmc(outfile::AbstractString, g::DCAgraph)
+	writeparammcmc(outfile::AbstractString, g::DCAGraph)
 
 Write graph `g` to file `outfile` using format `J i j a b value`.
 """
-function writeparammcmc(outfile::AbstractString, g::DCAgraph)
+function writeparammcmc(outfile::AbstractString, g::DCAGraph)
 	f = open(outfile, "w")
 	for i in 1:g.L
 		for j in (i+1):g.L

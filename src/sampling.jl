@@ -1,6 +1,6 @@
 """
 	sample(
-		graph::DCAgraph,
+		graph::DCAGraph,
 		M;
 		init = rand(1:graph.q, graph.L),
 		Twait = 1,
@@ -21,7 +21,7 @@ Sample `M` configurations from probability distribution defined by `graph`.
 - `outfile`: File path to save sample as a csv. Empty string to not save.
 """
 function sample(
-	graph::DCAgraph,
+	graph::DCAGraph,
 	M;
 	init = rand(1:graph.q, graph.L),
 	Twait = 1,
@@ -90,7 +90,7 @@ end
 #=
 Note: `jdx` contains precomputed indices for `conf`, of the form `(j-1)*q + conf[j]`
 =#
-function mcmc_step!(conf, jdx, g::DCAgraph; rng = Random.GLOBAL_RNG)
+function mcmc_step!(conf, jdx, g::DCAGraph; rng = Random.GLOBAL_RNG)
 	E = 0.
 	q, L = size(g)
 
@@ -140,7 +140,7 @@ function autocorr(sample::Array{Int64,2}, q::Int64)
 	return ac
 end
 
-function estimatetau(g::DCAgraph ; itau = 1, M = 300, tol=0.05, nchains=5)
+function estimatetau(g::DCAGraph ; itau = 1, M = 300, tol=0.05, nchains=5)
 
 	S = [sample(g, M; Twait=itau) for n in 1:nchains]
 	

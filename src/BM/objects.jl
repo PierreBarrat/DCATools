@@ -1,9 +1,9 @@
 """
-	DCAgrad
+	DCAGrad
 
 Store direction of gradient in `dJ` and `dh`, and step size in `stepJ` and `steph`. 
 """
-mutable struct DCAgrad
+mutable struct DCAGrad
     gradJ::Array{Float64,2}
     gradh::Array{Float64,1}
     stepJ::Array{Float64,2}
@@ -11,39 +11,39 @@ mutable struct DCAgrad
     L::Int64
     q::Int64
 end
-function DCAgrad(L::Int64, q::Int64)
-    return DCAgrad(zeros(Float64, L*q,L*q), zeros(Float64,L*q), zeros(Float64, L*q,L*q), zeros(Float64,L*q), L, q)
+function DCAGrad(L::Int64, q::Int64)
+    return DCAGrad(zeros(Float64, L*q,L*q), zeros(Float64,L*q), zeros(Float64, L*q,L*q), zeros(Float64,L*q), L, q)
 end
 
 import Base: +, *
 
 
 """
-	+(A::DCAgrad, B::DCAgrad)
+	+(A::DCAGrad, B::DCAGrad)
 
 Add two gradients. Step size is the one of the first argument. 
 """
-function +(A::DCAgrad, B::DCAgrad)
-    return DCAgrad(A.gradJ + B.gradJ, A.gradh + B.gradh, A.stepJ, A.steph, A.L, A.q)
+function +(A::DCAGrad, B::DCAGrad)
+    return DCAGrad(A.gradJ + B.gradJ, A.gradh + B.gradh, A.stepJ, A.steph, A.L, A.q)
 end
 
 """
-    *(λ::Float64, g::DCAgrad)
+    *(λ::Float64, g::DCAGrad)
 """
-function *(λ::Real, g::DCAgrad)
-    return DCAgrad(λ * g.gradJ, λ*g.gradh, g.stepJ, g.steph, g.L, g.q)
+function *(λ::Real, g::DCAGrad)
+    return DCAGrad(λ * g.gradJ, λ*g.gradh, g.stepJ, g.steph, g.L, g.q)
 end
 """
-    *(g::DCAgrad, λ::Real)
+    *(g::DCAGrad, λ::Real)
 """
-function *(g::DCAgrad, λ::Float64)
-    return DCAgrad(λ * g.gradJ, λ*g.gradh, g.stepJ, g.steph, g.L, g.q)
+function *(g::DCAGrad, λ::Float64)
+    return DCAGrad(λ * g.gradJ, λ*g.gradh, g.stepJ, g.steph, g.L, g.q)
 end
 
 """
     gradequal(x, y)
 
-Test equality between two `DCAgrad` objects.
+Test equality between two `DCAGrad` objects.
 """
 function gradequal(x, y)
     return (x.gradJ==y.gradJ) && (x.gradh==y.gradh) && (x.stepJ==y.stepJ) && (x.steph==y.steph)

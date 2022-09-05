@@ -12,11 +12,11 @@
 
 
 """
-	computeenergies!(md::MutData, g::DCAgraph)
+	computeenergies!(md::MutData, g::DCAGraph)
 
 Compute energies of all `Mutant` in `md.mutant` using `g`.
 """
-function computeenergies!(md::MutData, g::DCAgraph)
+function computeenergies!(md::MutData, g::DCAGraph)
 	md.E_wt = computeenergies(g, md.wt)
 	for mut in md.mutant
 		computeenergies!(mut, g, md.wt, md.E_wt)
@@ -26,11 +26,11 @@ function computeenergies!(md::MutData, g::DCAgraph)
 end
 
 """
-	computeenergies!(mut::Mutant, g::DCAgraph, wt::Array{Int64,1}, E_wt::Float64)
+	computeenergies!(mut::Mutant, g::DCAGraph, wt::Array{Int64,1}, E_wt::Float64)
 
 Compute energies of `mut` and of all single mutants in `mut.smut`. Compute epistatic effects as well using `E_wt`.
 """
-function computeenergies!(mut::Mutant, g::DCAgraph, wt::Array{Int64,1}, E_wt::Float64)
+function computeenergies!(mut::Mutant, g::DCAGraph, wt::Array{Int64,1}, E_wt::Float64)
 	mseq = copy(wt)
 	mseqt = copy(wt)
 	for smut in mut.smut
@@ -45,7 +45,7 @@ function computeenergies!(mut::Mutant, g::DCAgraph, wt::Array{Int64,1}, E_wt::Fl
 end
 
 """
-	mapenergies!(md::MutData, g::DCAgraph)
+	mapenergies!(md::MutData, g::DCAGraph)
 
 Map energies values of mutants to fitness values. Details of the mapping can be found in
 	Coevolutionary landscape inference and the context-dependence of mutations in beta-lactamase TEM-1
@@ -54,7 +54,7 @@ Energies in `md` are modified in the process.
 
 Output `mapping` is a dictionary such that `mapping[E] = fitness`.
 """
-function mapenergies!(md::MutData, g::DCAgraph)
+function mapenergies!(md::MutData, g::DCAGraph)
 	computeenergies!(md, g)
 	mapping = Dict{Float64, Float64}()
 	fitlist = Array{Float64,1}(undef, 0)
@@ -74,7 +74,7 @@ function mapenergies!(md::MutData, g::DCAgraph)
 end
 
 """
-	mapenergies(md::MutData, g::DCAgraph)
+	mapenergies(md::MutData, g::DCAGraph)
 
 Map energies values of mutants to fitness values. Details of the mapping can be found in
 	Coevolutionary landscape inference and the context-dependence of mutations in beta-lactamase TEM-1
@@ -82,7 +82,7 @@ Map energies values of mutants to fitness values. Details of the mapping can be 
 
 Output `mapping` is a dictionary such that `mapping[E] = fitness`.
 """
-function mapenergies(md::MutData, g::DCAgraph)
+function mapenergies(md::MutData, g::DCAGraph)
 	md_ = deepcopy(md)
 	computeenergies!(md_, g)
 	mapping = Dict{Float64, Float64}()
