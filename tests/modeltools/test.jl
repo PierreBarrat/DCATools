@@ -2,18 +2,12 @@ using DCATools
 using Test
 using Polynomials, Statistics
 
-N = 10 
+L = 10
 q = 4 
 M = 1000
 
-J = rand(Float64, N*q,N*q)
-J = J + J'
-for i = 1:N
-    J[(i-1)*q .+ (1:q), (i-1)*q .+ (1:q)] .= 0
-end
-h = rand(Float64,N*q)
 
-g = DCAgraph(J,h,N,q)
+g = DCAGraph(L, q, init=:rand)
 g0 = deepcopy(g)
 glg = deepcopy(g)
 switchgauge!(g0)
@@ -33,10 +27,10 @@ end
 end 
 
 @testset "Gauge change: conservation of energies" begin
-	seq = rand(collect(1:q), M, N)
-	E_init = computeenergies(g,seq)
-	E_0 = computeenergies(g0,seq)
-	E_lg = computeenergies(glg, seq)
+	seq = rand(collect(1:q), M, L)
+	E_init = energy(g,seq)
+	E_0 = energy(g0,seq)
+	E_lg = energy(glg, seq)
 	P1 = fit(E_init, E_0, 1)
 	P2 = fit(E_init, E_lg, 1)
 	@test isapprox(P1[1], 1, atol=1e-3)

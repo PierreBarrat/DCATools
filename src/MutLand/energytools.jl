@@ -36,10 +36,10 @@ function computeenergies!(mut::Mutant, g::DCAGraph, wt::Array{Int64,1}, E_wt::Fl
 	for smut in mut.smut
 		mseq[smut.i] = smut.a
 		mseqt[smut.i] = smut.a
-		smut.E = computeenergies(g, mseq) .- E_wt
+		smut.E = energy(g, mseq) .- E_wt
 		mseq[smut.i] = wt[smut.i]
 	end
-	mut.E = computeenergies(g, mseqt) .- E_wt
+	mut.E = energy(g, mseqt) .- E_wt
 
 	return nothing
 end

@@ -183,34 +183,4 @@ end
 
 
 
-"""
-	readmsanum(infile::AbstractString ; format=1, header=false)
 
-Read an MSA stored in `infile` in a numerical format. 
-
-If `format=1`, amino acids should be mapped from 1 to `q`. If `format=0`, they should be mapped from 0 to `q-1`.
-`header` argument allows for discarding the first line of `infile`. 
-"""
-function readmsanum(infile::AbstractString ; format=1, header=false)
-	Y = Array{Float64,2}(undef,0,0)
-	try 
-		if header
-			Y = readdlm(infile, Int, skipstart=1)
-		else
-			Y = readdlm(infile, Int)
-		end	
-	catch err
-		println("inputoutput.jl - readmsanum: readdlm failed on file $infile. The alignment may not be of the correct format.")
-		error(err)
-	end
-
-	if format==0
-		Y .+= 1
-	elseif format==1
-		if findmin(Y)[1] == 0
-			error("inputoutput.jl - readmsanum: file $infile contains a 0 value. `format` should be set to 0.")
-		end
-	end
-
-	return Y
-end

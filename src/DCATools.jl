@@ -16,11 +16,13 @@ include("global.jl")
 include("IO.jl")
 export writeparam, readmsanum
 
+include("alignment_tools.jl")
+
 include("alignment_frequencies.jl")
 export pairwise_frequencies, computeweights
 
 include("modeltools.jl")
-export switchgauge!, computeenergies
+export switchgauge!, energy
 
 include("contactprediction.jl")
 export PPV, Fapc

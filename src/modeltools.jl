@@ -1,5 +1,5 @@
 """
-    switchgauge!(g::DCAGraph; gauge=:sum0, col=g.q, wt=Array{Int,1}(undef,0))
+    switchgauge!(g::DCAGraph; gauge=:sum0, col=g.q, wt)
 
 Switch parameters in `g` to gauge `gauge`.
 Implemented gauges:
@@ -111,79 +111,69 @@ function switchgaugeML(J, h, L, q)
     return Jo, ho
 end
 
-
 """
-    computeenergies(g::DCAGraph, sample::Array{Int,2})
+    energy(g::DCAGraph, sample)
 
 Compute energies of all configurations in `sample` with graph `g`.
 """
-function computeenergies(g::DCAGraph, sample::Array{Int,2})
-
-    (M,L) = size(sample)
-    energies = zeros(Float64, M)
-    for m = 1:M
-        for i = 1:L
-            for j = (i+1):L
-                energies[m] -= g.J[(i-1)*g.q+sample[m,i], (j-1)*g.q+sample[m,j]]
-            end
-        energies[m] -= g.h[(i-1)*g.q+sample[m,i]]
+function energy(g::DCAGraph, S)
+	L = length(S)
+	E = 0
+	for i in 1:L
+        for j in (i+1):L
+            E -= g[j, i, S[j], S[i]]
         end
+    	E -= g[i, S[i]]
     end
-    return energies
+    return E
 end
-
-"""
-    computeenergies(g::DCAGraph, sample::Array{Int,1})
-
-Compute energies of all configurations in `sample` with graph `g`.
-"""
-function computeenergies(g::DCAGraph, sample::Array{Int,1})
-    return computeenergies(g,reshape(sample, 1, length(sample)))[1]
-end
+energy(g::DCAGraph, S::Matrix{Int}) = map(s -> energy(g,s), eachrow(S))
 
 
 """
-    inferprofile(Y::Array{Int,2}; q=findmax(Y)[1], pc = 1e-5, weights=[], save::String="")
+    profile_model(Y::Array{Int,2}; q=findmax(Y)[1], pc = 1e-5, weights=[], save=filename)
 
 Infer profile model from alignment `Y`. 
 
 Keywords:
 - `q`: Default to maximum value in `Y`. 
--`pc` and `save`: See `inferprofile`. 
 - `weights`: see `pairwise_frequencies`
-- 
 """
-function inferprofile(
+function profile_model(
 	msa::Array{Int,2};
 	q=findmax(msa)[1],
 	pc = 1e-5,
-	weights="",
-	save=""
+	weights=[],
+	save="",
 )
     f1 = pairwise_frequencies(msa, q=q, weights=weights)[1]
-    return inferprofile(f1, q, pc=pc, save=save)
+    return profile_model(f1, q, pc=pc, save=save)
 end
 
-# """
-#     inferprofile(f1::Array{Float64,1}, q; pc = 1e-5, save::String="")
+"""
+    profile_model(f1::Array{Float64,1}, q; pc = 1e-5, save=filename)
 
-# Infer profile model from frequencies `f1`.
+Infer profile model from frequencies `f1`.
 
-# Keywords:
-# -`pc`: Pseudocount ratio. Defaults to `1e-5`.
-# - save: File to save inferred profile.
-# """
-# function inferprofile(f1::Array{Float64,1}, q; pc = 1e-5, save="")
-#     L = Int(size(f1,1)/q)
-#     h = log.((1-pc)*f1 .+ pc/q)
-#     for i in 1:L
-#         h[(i-1)*q .+ (1:q)] .-= mean(h[(i-1)*q .+ (1:q)])
-#     end
-#     if save!=""
-# #         writedlm(outfile, [zeros(L*q,L*q) ; h'], " ") # should use write_graph
-#     end
-#     return DCAGraph(zeros(L*q,L*q), h, L, q)
-# end
+Keywords:
+-`pc`: Pseudocount ratio. Defaults to `1e-5`.
+- save: File to save inferred profile.
+"""
+function profile_model(f1::Array{Float64,1}, q; pc = 1e-5, save="")
+    L = Int(size(f1,1)/q)
+
+    h = log.((1-pc)*f1 .+ pc/q)
+    for i in 1:L
+        h[(i-1)*q .+ (1:q)] .-= mean(h[(i-1)*q .+ (1:q)])
+    end
+    g = DCAGraph(; L, q, J=zeros(L*q,L*q), h)
+
+    if save != ""
+    	write(save, g)
+    end
+
+    return g
+end
 
 
 """

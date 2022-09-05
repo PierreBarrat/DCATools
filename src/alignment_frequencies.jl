@@ -108,10 +108,10 @@ end
     	computew=false,
     	weights=[],
     	theta=0.2,
-    	saveweights="",
-    	format=:numerical,
-    	header = false,
     	pc=0.,
+    	msa_format=:numerical,
+    	header = false,
+    	saveweights="",
     )
 
 Compute pairwise frequencies for the file input `msa`.
@@ -119,25 +119,30 @@ Compute pairwise frequencies for the file input `msa`.
 
 ## Kwargs
 - `q`: default `findmax(Y)[1]`
-- `weights`: default `[]`. If it is a `String`, phylogenetic weights are read from the corresponding file. If it is an `Array{Float64,1}`, they are used directly.
-- `computew`: default `false`. If true, phylogenetic weights are computed, calling the appropriate `computeweights`. `weights` is then ignored.
+- `weights`: default `[]`.
+   If it is a `String`, phylogenetic weights are read from the corresponding file.
+   If it is an `Array{Float64,1}`, they are used directly.
+- `computew`: default `false`.
+   If true, phylogenetic weights are computed, calling the appropriate `computeweights`.
+   `weights` is then ignored.
 - `saveweights` and `theta`: see `computeweights`.
-- `header` and `format`: see `readmsanum`.
+- `header` and `msa_format`: see `readmsanum`.
 - `pc`: default 0. Pseudocount ratio.
 """
 function pairwise_frequencies(
 	msa::String;
 	q = 0,
-	computew=false,
-	weights=[],
-	theta=0.2,
-	saveweights="",
-	format=:numerical,
+	computew = false,
+	weights = [],
+	theta = 0.2,
+	pc = 0.,
+	msa_format = :numerical,
+	index_style = 1,
 	header = false,
-	pc=0.,
+	saveweights = "",
 )
-	if format == :numerical
-    	Y = readmsanum(msa; header)
+	if msa_format == :numerical
+    	Y = readmsanum(msa; header, index_style)
     end
     if q == 0
         q = findmax(Y)[1]
@@ -150,7 +155,7 @@ end
 """
     computeweights(
     	msa::String;
-    	theta = 0.2, saveweights = "", format=:numerical, header=false
+    	theta = 0.2, saveweights = "", msa_format=:numerical, header=false
     )
 
 Compute weights for file input `msa` using threshold `theta`.
@@ -158,13 +163,13 @@ Compute weights for file input `msa` using threshold `theta`.
 ## Kwargs
 - `theta`: threshold of similarity under which sequences are weighted down. Default `0.2`.
 - `saveweights`: weights are saved there if non empty. Default `""`
-- `format` and `header`: used to read `msa`. See `readmsanum`.
+- `msa_format` and `header`: used to read `msa`. See `readmsanum`.
 """
 function computeweights(
 	msa::String;
-	theta = 0.2, saveweights = "", format=:numerical, header=false
+	theta = 0.2, saveweights = "", msa_format=:numerical, header=false
 )
-    Y = readmsanum(msa, format, header)
+    Y = readmsanum(msa, msa_format, header)
     w = computeweights(Y, theta, saveweights)
     return w
 end
@@ -214,47 +219,7 @@ function computeweights(Y::Matrix{<:Integer}, theta::Float64)
     return 1 ./ weights
 end
 
-"""
-    pdist(Y::Matrix{<:Integer})
 
-Pairwise hamming distance between sequences in lines of `Y`.
-"""
-function pdist(Y::Matrix{<:Integer})
-    M = size(Y,1)
-    Yt = Y'
-    out = zeros(Int64, M, M)
-    for m1 in 1:M
-        for m2 in (m1+1):M
-            out[m2,m1] = hamming(Yt[:,m1], Yt[:,m2])
-        end
-    end
-    return out + out'
-end
-
-
-# """
-#     convert_fasta(infasta::String, outfasta::String, mapping)
-
-# Convert amino-acid characters in `infasta` to numbers, using `mapping.
-# Write result to `outfasta`.
-# """
-# function convert_fasta(infasta::String, outfasta::String, mapping = DEFAULT_AA_MAPPING)
-#     fasta = readfasta(infasta)
-#     out = Array{Int64,2}(undef, length(fasta), length(fasta[1][2]))
-#     for (i,(n,s)) in enumerate(fasta)
-#         out[i,:] .= convert_seq(s, mapping)
-#     end
-#     writedlm(outfasta, out, ' ')
-# end
-
-# function convert_seq(s::String, mapping = DEFAULT_AA_MAPPING)
-#     mapdict = Dict(x=>findfirst(a->a==x, mapping) for x in mapping)
-#     σ = Array{Int64,1}(undef, length(s))
-#     for (i,a) in enumerate(s)
-#         σ[i] = get(mapdict, a, 1)
-#     end
-#     return σ
-# end
 
 # """
 #     compute_profile(Y::Matrix{<:Integer}, w::Array{Float64,1}, q::Integer)

@@ -1,4 +1,5 @@
 using Test
+using Crayons.Box
 
 
 fatalerrors = length(ARGS) > 0 && ARGS[1] == "-f"
@@ -15,6 +16,7 @@ println("Running tests:")
 
 for my_test in my_tests
     try
+    	println("\t", BOLD(BLUE_FG("TESTING")), " $(my_test)")
         include(my_test)
         println("\t\033[1m\033[32mPASSED\033[0m: $(my_test)")
     catch e
@@ -27,6 +29,7 @@ for my_test in my_tests
             println()
         end
     end
+    println()
 end
 
 if anyerrors
