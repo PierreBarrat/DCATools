@@ -1,12 +1,27 @@
 """
-	DCAGraph
+	mutable struct DCAGraph
+
+Structure representing a Potts model.
+
+## Fields
+```
+L::Int64
+q::Int64
+J::Array{Float64,2}
+h::Array{Float64,1}
+```
 """
-mutable struct DCAGraph
-    J::Array{Float64,2}
-    h::Array{Float64,1}
+Base.@kwdef mutable struct DCAGraph
     L::Int64
     q::Int64
+    J::Array{Float64,2} = zeros(Float64, L*q, L*q)
+    h::Array{Float64,1} = zeros(Float64, L*q)
 end
+"""
+	DCAGraph(L,q)
+
+Creates a `DCAGraph` of the required size. Parameters are initialized to zero.
+"""
 function DCAGraph(L,q)
 	return DCAGraph(zeros(Float64, L*q, L*q), zeros(Float64, L*q), L, q)
 end
