@@ -156,7 +156,7 @@ end
 Infer profile model from frequencies `f1`.
 
 Keywords:
--`pc`: Pseudocount ratio. Defaults to `1e-5`.
+- `pc`: Pseudocount ratio. Defaults to `1e-5`.
 - save: File to save inferred profile.
 """
 function profile_model(f1::Array{Float64,1}, q; pc = 1e-5, save="")

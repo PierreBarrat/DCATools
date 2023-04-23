@@ -1,6 +1,7 @@
 module DCATools
 
 using DelimitedFiles
+using FASTX
 using LinearAlgebra
 using Printf
 using Random

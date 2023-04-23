@@ -48,6 +48,22 @@ function read_msa_num(infile::AbstractString ; index_style=1, header=false)
 	return Y
 end
 
+function read_msa(fastafile::AbstractString; mapping = DEFAULT_AA_MAPPING)
+	mapdict = Dict(x=>findfirst(a->a==x, mapping) for x in mapping)
+
+	fasta = FASTA.Reader(open(fastafile, "r"))
+	return vcat(map(x -> map_aa_seq(sequence(x), mapdict)', fasta)...)
+end
+
+map_aa_seq(s; mapping = DEFAULT_AA_MAPPING) = map_aa_seq(s, mapping)
+function map_aa_seq(s::AbstractString, mapping::AbstractString)
+	mapdict = Dict(x=>findfirst(a->a==x, mapping) for x in mapping)
+	return map_aa_seq(s, mapdict)
+end
+function map_aa_seq(s::AbstractString, mapping::AbstractDict)
+	return map(x -> get(mapping, x, 1), collect(s))
+end
+
 # """
 #     convert_fasta(infasta::String, outfasta::String, mapping)
 
