@@ -125,9 +125,9 @@ function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64,
 		v() && println("Norm of gradient: $(bmlog.gradnorm)")
 		woutput && writelog(logfile, bmlog)
 		if woutput && mod(it, meta.saveparam)==0 && meta.savefolder!=""
-			writeparam("$(meta.savefolder)/DCABM_it$(it)_mat.txt", g, format="mat")
+			write("$(meta.savefolder)/DCABM_it$(it)_mat.txt", g, :matrix)
 		elseif woutput && mod(it, meta.saveparam)==0
-			writeparam("DCABM_it$(it)_mat.txt", g, format="mat")
+			write("DCABM_it$(it)_mat.txt", g, :matrix)
 		end
 	end
 	return g, cgrad, bmlog
@@ -140,7 +140,7 @@ end
 """
 function bmsample(g::DCAGraph, M::Int64, nprocs, tau::Int64)
 	if tau == 0
-		tau = min(estimatetau(g)[1], g.L)
+		tau = min(DCATools.estimatetau(g)[1], g.L)
 	end
 	return sample(g, M; Twait = tau), tau
 end
