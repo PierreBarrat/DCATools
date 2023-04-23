@@ -16,7 +16,7 @@ function pdist(Y::Matrix{<:Integer})
 end
 
 """
-	readmsanum(infile::AbstractString ; index_style=1, header=false)
+	read_msa_num(infile::AbstractString ; index_style=1, header=false)
 
 Read an MSA stored in `infile` in a numerical index_style.
 
@@ -24,7 +24,7 @@ If `index_style=1`, amino acids should be mapped from 1 to `q`.
 If `index_style=0`, they should be mapped from 0 to `q-1`.
 `header` argument allows for discarding the first line of `infile`.
 """
-function readmsanum(infile::AbstractString ; index_style=1, header=false)
+function read_msa_num(infile::AbstractString ; index_style=1, header=false)
 	Y = Array{Float64,2}(undef,0,0)
 	try
 		if header
@@ -33,7 +33,7 @@ function readmsanum(infile::AbstractString ; index_style=1, header=false)
 			Y = readdlm(infile, Int)
 		end
 	catch err
-		println("inputoutput.jl - readmsanum: readdlm failed to read $infile. The alignment may not be of the expected format.")
+		println("inputoutput.jl - read_msa_num: readdlm failed to read $infile. The alignment may not be of the expected format.")
 		error(err)
 	end
 
@@ -41,7 +41,7 @@ function readmsanum(infile::AbstractString ; index_style=1, header=false)
 		Y .+= 1
 	elseif index_style==1
 		if findmin(Y)[1] == 0
-			error("inputoutput.jl - readmsanum: file $infile contains a 0 value. `index_style` should be set to 0.")
+			error("inputoutput.jl - read_msa_num: file $infile contains a 0 value. `index_style` should be set to 0.")
 		end
 	end
 

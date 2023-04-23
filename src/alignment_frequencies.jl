@@ -126,7 +126,7 @@ Compute pairwise frequencies for the file input `msa`.
    If true, phylogenetic weights are computed, calling the appropriate `computeweights`.
    `weights` is then ignored.
 - `saveweights` and `theta`: see `computeweights`.
-- `header` and `msa_format`: see `readmsanum`.
+- `header` and `msa_format`: see `read_msa_num`.
 - `pc`: default 0. Pseudocount ratio.
 """
 function pairwise_frequencies(
@@ -142,7 +142,7 @@ function pairwise_frequencies(
 	saveweights = "",
 )
 	if msa_format == :numerical
-    	Y = readmsanum(msa; header, index_style)
+    	Y = read_msa_num(msa; header, index_style)
     end
     if q == 0
         q = findmax(Y)[1]
@@ -163,13 +163,13 @@ Compute weights for file input `msa` using threshold `theta`.
 ## Kwargs
 - `theta`: threshold of similarity under which sequences are weighted down. Default `0.2`.
 - `saveweights`: weights are saved there if non empty. Default `""`
-- `msa_format` and `header`: used to read `msa`. See `readmsanum`.
+- `msa_format` and `header`: used to read `msa`. See `read_msa_num`.
 """
 function computeweights(
 	msa::String;
 	theta = 0.2, saveweights = "", msa_format=:numerical, header=false
 )
-    Y = readmsanum(msa, msa_format, header)
+    Y = read_msa_num(msa, msa_format, header)
     w = computeweights(Y, theta, saveweights)
     return w
 end

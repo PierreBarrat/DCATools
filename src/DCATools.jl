@@ -14,7 +14,7 @@ export DCAGraph
 
 include("global.jl")
 include("IO.jl")
-export writeparam, readmsanum
+export writeparam, read_msa_num
 
 include("alignment_tools.jl")
 
