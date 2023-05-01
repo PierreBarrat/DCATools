@@ -112,6 +112,28 @@ function mcmc_step!(conf, jdx, g::DCAGraph; rng = Random.GLOBAL_RNG)
 		jdx[i] = (i-1)*q + b
 	end
 end
+function mcmc_step!(conf, g::DCAGraph; rng = Random.GLOBAL_RNG)
+	E = 0.
+	q, L = size(g)
+
+	# Flip position
+	i = rand(rng, 1:L)
+	a = conf[i] # initial state
+	b = mod(a - 1 + rand(rng, 1:(q-1)), q) + 1 # new state
+	id_i_b = (i-1)*q+b # precomputed index for (i,b)
+	# Delta E
+	E = g.h[(i-1)*g.q + conf[i]] - g.h[id_i_b]
+	for j = 1:L
+		if j != i
+			E += g.J[(i-1)*g.q + conf[i], (j-1)*g.q + conf[j]] - g.J[id_i_b, (j-1)*g.q + conf[j]]
+		end
+	end
+
+	if E<=0. || exp(-E) > rand()
+		@debug "accept"
+		conf[i] = b
+	end
+end
 
 
 
