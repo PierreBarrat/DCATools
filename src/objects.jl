@@ -19,6 +19,29 @@ Base.@kwdef mutable struct DCAGraph
     J::Array{Float64,2} = zeros(Float64, L*q, L*q)
     h::Array{Float64,1} = zeros(Float64, L*q)
 end
+
+function DCAGraph(J::AbstractArray{<:Real, 4}, h::AbstractArray{<:Real, 2})
+	@assert size(J,3) == size(J,4) == size(h,2) "Incoherent sizes for J and h" size(J) size(h)
+	@assert size(J,1) == size(J,2) == size(h,1) "Incoherent sizes for J and h" size(J) size(h)
+
+	L = size(J,1)
+	q = size(J,3)
+
+	J_ = zeros(L*q, L*q)
+	for i in 1:L, j in i:L
+		J_[(i-1)*q .+ (1:q), (j-1)*q .+ (1:q)] .= J[i,j,:,:]
+		J_[(j-1)*q .+ (1:q), (i-1)*q .+ (1:q)] .= J[j,i,:,:]
+	end
+	@assert J_ == J_' "`J` matrix is not symetric"
+
+	h_ = zeros(L*q)
+	for i in 1:L
+		h_[(i-1)*q .+ (1:q)] .= h[i,:]
+	end
+
+	return DCAGraph(L, q, J_, h_)
+end
+
 """
 	DCAGraph(
 		L,q;
@@ -39,7 +62,7 @@ The output matrix is made symetric with zeroes on the diagonal blocks.
 
 """
 function DCAGraph(
-	L,q;
+	L, q;
 	init = :null, Jrand = N -> 1/L*randn(N,N), hrand = N -> 1/sqrt(L)*randn(N),
 )
 	if init == :null
