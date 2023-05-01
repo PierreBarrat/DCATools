@@ -26,8 +26,8 @@ fnw_2 = fnw_2[1:(end-1),:]
 ww = [1.,1.]
 wnw = [0.5, 0.5, 1.]
 
-Yu = readmsanum("aligntools/msa_n3q2_unique.txt")
-Ynu = readmsanum("aligntools/msa_n3q2_nonunique.txt")
+Yu = read_msa_num("aligntools/msa_n3q2_unique.txt")
+Ynu = read_msa_num("aligntools/msa_n3q2_nonunique.txt")
 
 # 1.
 @testset "No weights" begin

@@ -15,9 +15,10 @@ export DCAGraph
 
 include("global.jl")
 include("IO.jl")
-export writeparam, read_msa_num
+export writeparam
 
 include("alignment_tools.jl")
+export read_msa_num, read_msa
 
 include("alignment_frequencies.jl")
 export pairwise_frequencies, computeweights

@@ -4,7 +4,7 @@ using Statistics, Polynomials
 
 q = 21
 g = DCAGraph("MCMC/parameters_PF01535_mat.txt", :matrix; q=q)
-sample_ref = readmsanum("MCMC/MC_matteo.txt", index_style=0, header=true)
+sample_ref = read_msa_num("MCMC/MC_matteo.txt", index_style=0, header=true)
 f1, f2 = pairwise_frequencies(sample_ref)
 
 sample_test = sample(g, 5_000; Twait=5)
