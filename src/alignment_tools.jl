@@ -63,6 +63,14 @@ end
 function map_aa_seq(s::AbstractString, mapping::AbstractDict)
 	return map(x -> get(mapping, x, 1), collect(s))
 end
+"""
+	map_seq_to_aa(s::AbstractVector{Int}, mapping = DEFAULT_AA_MAPPING)
+	map_seq_to_aa(s; mapping = DEFAULT_AA_MAPPING)
+"""
+function map_seq_to_aa(s::AbstractVector{Int}, mapping = DEFAULT_AA_MAPPING)
+	return string(map(x -> mapping[x], s)...)
+end
+map_seq_to_aa(s; mapping = DEFAULT_AA_MAPPING) = map_seq_to_aa(s, mapping)
 
 # """
 #     convert_fasta(infasta::String, outfasta::String, mapping)
