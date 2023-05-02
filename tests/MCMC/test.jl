@@ -2,9 +2,11 @@ using Test
 using DCATools
 using Statistics, Polynomials
 
+testdir = dirname(pathof(DCATools)) * "/../tests/"
+
 q = 21
-g = DCAGraph("MCMC/parameters_PF01535_mat.txt", :matrix; q=q)
-sample_ref = read_msa_num("MCMC/MC_matteo.txt", index_style=0, header=true)
+g = DCAGraph(testdir * "MCMC/parameters_PF01535_mat.txt", :matrix; q=q)
+sample_ref = read_msa_num(testdir * "MCMC/MC_matteo.txt", index_style=0, header=true)
 f1, f2 = pairwise_frequencies(sample_ref)
 
 sample_test = sample(g, 5_000; Twait=5)

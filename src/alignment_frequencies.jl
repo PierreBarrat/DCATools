@@ -54,7 +54,7 @@ Return frequencies `f1` and `f2` and weights.
 - `pc`: default 0. Pseudocount ratio.
 """
 function pairwise_frequencies(
-	Y;
+	Y::AbstractMatrix{<:Integer};
 	q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", pc=0.
 )
     w = Vector{Float64}(undef, 0)
@@ -101,6 +101,8 @@ function pairwise_frequencies(
     return (f1,f2,w)
 end
 
+pairwise_frequencies(Y::DCASample; kwargs...) = pairwise_frequencies(Y.dat; q=Y.q, kwargs...)
+
 """
     pairwise_frequencies(
     	msa::String;
@@ -130,31 +132,32 @@ Compute pairwise frequencies for the file input `msa`.
 - `pc`: default 0. Pseudocount ratio.
 """
 function pairwise_frequencies(
-	msa::String;
+	msa::AbstractString;
 	q = 0,
-	computew = false,
-	weights = [],
-	theta = 0.2,
 	pc = 0.,
+	theta = 0.2,
+	weights = [],
+	computew = false,
+	saveweights = "",
 	msa_format = :numerical,
 	index_style = 1,
 	header = false,
-	saveweights = "",
+	mapping = DEFAULT_AA_MAPPING,
 )
-	if msa_format == :numerical
-    	Y = read_msa_num(msa; header, index_style)
-    end
-    if q == 0
-        q = findmax(Y)[1]
-    end
-    return pairwise_frequencies(Y; q, computew, weights, theta, saveweights, pc)
+	Y = if msa_format == :numerical
+    	read_msa_num(msa; header, index_style, mapping)
+	elseif msa_format == :fasta
+		read_msa(msa; mapping)
+	end
+
+    return pairwise_frequencies(Y; Y.q, computew, weights, theta, saveweights, pc)
 end
 
 
 
 """
     computeweights(
-    	msa::String;
+    	msa::AbstractString;
     	theta = 0.2, saveweights = "", msa_format=:numerical, header=false
     )
 
@@ -163,10 +166,10 @@ Compute weights for file input `msa` using threshold `theta`.
 ## Kwargs
 - `theta`: threshold of similarity under which sequences are weighted down. Default `0.2`.
 - `saveweights`: weights are saved there if non empty. Default `""`
-- `msa_format` and `header`: used to read `msa`. See `read_msa_num`.
+- `msa_format` (`:fasta` or `:numerical`) and `header`: used to read `msa`. See `read_msa_num`.
 """
 function computeweights(
-	msa::String;
+	msa::AbstractString;
 	theta = 0.2, saveweights = "", msa_format=:numerical, header=false
 )
     Y = read_msa_num(msa, msa_format, header)
@@ -177,26 +180,27 @@ end
 """
     computeweights(Y; theta = 0.2, saveweights="")
 
-Compute weights for array input `Y`.
+Compute phylogenetic weights for input `Y`.
 
 ## Kwargs
 - `theta`: threshold of similarity under which sequences are weighted down. Default `0.2`.
 - `saveweights`: weights are saved there if non empty. Default `""`
 """
-function computeweights(Y; theta = 0.2, saveweights="")
+function computeweights(Y::AbstractMatrix{<:Integer}; theta = 0.2, saveweights="")
     w = computeweights(Y, theta)
     if saveweights!=""
         writedlm(saveweights,w," ")
     end
     return w
 end
+computeweights(Y::DCASample; kwargs...) = computeweights(Y.dat; kwargs...)
 
 """
     computeweights(Y::Matrix{<:Integer}, theta::Float64)
 
 Basic routine. Compute weights of sequences in alignment `Y`, using threshold `theta`.
 """
-function computeweights(Y::Matrix{<:Integer}, theta::Float64)
+function computeweights(Y::AbstractMatrix{<:Integer}, theta::Float64)
     Y = Y';
     L, M = size(Y)
     h = L * (1-theta)
@@ -218,79 +222,3 @@ function computeweights(Y::Matrix{<:Integer}, theta::Float64)
     end
     return 1 ./ weights
 end
-
-
-
-# """
-#     compute_profile(Y::Matrix{<:Integer}, w::Array{Float64,1}, q::Integer)
-
-# Base routine for computing profile in sample `Y`. `w` is an array containing the weights.
-# """
-# function compute_profile(Y, w, q)
-#     if typeof(w)==Array{Float64,2}
-#         @warn("`w` is of dimension 2. Applying `vec`.")
-#         w = vec(w)
-#     end
-
-#     (M,L) = size(Y)
-#     f1 = zeros(Float64,L*q)
-
-#     if size(w)[1]!=M
-#         error("Incorrect number of weights\n")
-#     end
-
-#     Meff = sum(w)
-#     for m in 1:M
-#         for j in 1:L
-#             f1[(j-1)*q+Y[m,j]] += w[m]
-#         end
-#     end
-#     f1 = f1./Meff
-#     return f1
-# end
-# """
-#     compute_profile(Y::Matrix{<:Integer}; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", pc=0.)
-
-# Compute single site frequencies for an array input. `Y` is an array of `Int64`. Return frequencies `f1` and weights.
-
-# Keywords:
-# - `q`: default `findmax(Y)[1]`
-# - `weights`: default `[]`. If it is a `String`, phylogenetic weights are read from the corresponding file. If it is an `Array{Float64,1}`, they are used directly.
-# - `computew`: default `false`. If true, phylogenetic weights are computed, calling the appropriate `computeweights`. `weights` is then ignored.
-# - `saveweights` and `theta`: see `computeweights`.
-# - `pc`: default 0. Pseudocount ratio.
-# """
-# function compute_profile(Y::Matrix{<:Integer}; q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", pc=0.)
-#     w = Array{Float64,1}(undef, 0)
-#     if computew
-#         # compute weights
-#         w = computeweights(Y, theta=theta, saveweights=saveweights)
-#         if weights!=[]
-#             # computew cancels weights
-#             @warn("Both keywords `weights` and `computew` were declared. `weights` ignored.\n")
-#         end
-#     else
-#         if weights == []
-#             # no weights used
-#             w = ones(Float64, size(Y,1))
-#         elseif typeof(weights) == String
-#             # read them from file
-#             w = vec(readdlm(weights, Float64))
-#         elseif typeof(weights) == Array{Float64,1}
-#             # read them from the array
-#             w = weights
-#         else
-#             # not recognized, no weights used
-#             warn("Unrecognized format for keyword `weights`.")
-#         end
-#     end
-#     if size(w,1)!=size(Y,1)
-#         error("Incorrect size for `weights`. Should be equal to the number of sequences in `Y`.")
-#     end
-
-#     f1 = compute_profile(Y,w,q)
-#     if pc != 0.
-#         f1 = (1-pc)*f1 .+ pc/q
-#     end
-#     return (f1,w)
-# end

@@ -1,4 +1,3 @@
-## This could be struct instead of mutable struct?
 """
 	mutable struct DCAGraph
 
@@ -18,9 +17,13 @@ Base.@kwdef mutable struct DCAGraph
     q::Int
     J::Array{Float64,2} = zeros(Float64, L*q, L*q)
     h::Array{Float64,1} = zeros(Float64, L*q)
+    mapping::String = DEFAULT_AA_MAPPING
 end
 
-function DCAGraph(J::AbstractArray{<:Real, 4}, h::AbstractArray{<:Real, 2})
+function DCAGraph(
+	J::AbstractArray{<:Real, 4}, h::AbstractArray{<:Real, 2};
+	mapping = DEFAULT_AA_MAPPING,
+)
 	@assert size(J,3) == size(J,4) == size(h,2) "Incoherent sizes for J and h" size(J) size(h)
 	@assert size(J,1) == size(J,2) == size(h,1) "Incoherent sizes for J and h" size(J) size(h)
 
@@ -39,7 +42,7 @@ function DCAGraph(J::AbstractArray{<:Real, 4}, h::AbstractArray{<:Real, 2})
 		h_[(i-1)*q .+ (1:q)] .= h[i,:]
 	end
 
-	return DCAGraph(L, q, J_, h_)
+	return DCAGraph(L, q, J_, h_, mapping)
 end
 
 """
@@ -64,9 +67,10 @@ The output matrix is made symetric with zeroes on the diagonal blocks.
 function DCAGraph(
 	L, q;
 	init = :null, Jrand = N -> 1/L*randn(N,N), hrand = N -> 1/sqrt(L)*randn(N),
+	mapping = DEFAULT_AA_MAPPING,
 )
 	if init == :null
-		DCAGraph(L, q, zeros(Float64, L*q, L*q), zeros(Float64, L*q))
+		DCAGraph(L, q, zeros(Float64, L*q, L*q), zeros(Float64, L*q), mapping)
 	elseif init == :rand
 		return random_graph(L, q, Jrand, hrand)
 	end
@@ -125,3 +129,29 @@ Base.setindex!(g::DCAGraph, val, i, a) = (g.h[(i .-1)*g.q .+ a] = val)
 Base.setindex!(g::DCAGraph, val, i, a::Colon) = (g.h[(i .-1)*g.q .+ (1:g.q)] .= val)
 Base.setindex!(g::DCAGraph, val, i::Colon, a) = (g.h[(0:g.L-1)*g.q .+ a] .= val)
 Base.setindex!(g::DCAGraph, val, i::Colon, a::Colon) = (g.h[:] .= val)
+
+
+
+Base.@kwdef mutable struct DCASample
+	dat::Matrix{Int}
+	q :: Int = length(mapping)
+	mapping :: String = DEFAULT_AA_MAPPING
+	function DCASample(dat, q, mapping)
+		@assert isempty(mapping) || q == length(mapping) "Inconsistent size for mapping $mapping and q=$q.
+		Use `mapping=\"\"` if you do not care about the mapping."
+		new(dat, q, mapping)
+	end
+end
+
+DCASample(Y, q; mapping = DEFAULT_AA_MAPPING) = DCASample(Y, q, mapping)
+
+Base.size(X::DCASample) = size(X.dat)
+
+function Base.show(io::IO, X::DCASample)
+	M, L = size(X)
+	print(io, "Alignment of $M sequences of length $L - ")
+	show(io, X.dat)
+end
+Base.show(io::IO, x::MIME"text/plain", X::DCASample) = show(io, x, X.dat)
+
+eachsequence(X::DCASample) = eachrow(X.dat)

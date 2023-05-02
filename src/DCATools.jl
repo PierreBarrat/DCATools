@@ -7,13 +7,15 @@ using Printf
 using Random
 using Statistics
 
-import Base: *, getindex, setindex!, size, write
-
-
-include("objects.jl")
-export DCAGraph
+import Base: *, getindex, setindex!, size, write, show
 
 include("global.jl")
+export DEFAULT_AA_MAPPING
+
+include("objects.jl")
+export DCAGraph, DCASample, eachsequence
+
+
 include("IO.jl")
 export writeparam
 

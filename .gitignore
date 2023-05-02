@@ -23,7 +23,7 @@ docs/site/
 # environment.
 Manifest.toml
 
-tmp/*
+*/tmp/*
 
 # Ignore dummy testing data
 testdata
