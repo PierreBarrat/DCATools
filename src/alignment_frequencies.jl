@@ -101,7 +101,14 @@ function pairwise_frequencies(
     return (f1,f2,w)
 end
 
-pairwise_frequencies(Y::DCASample; kwargs...) = pairwise_frequencies(Y.dat; q=Y.q, kwargs...)
+function pairwise_frequencies(Y::DCASample; computew=false, kwargs...)
+	if computew
+		f1, f2, w = pairwise_frequencies(Y.dat; q=Y.q, computew, kwargs...)
+	else
+		f1, f2, w = pairwise_frequencies(Y.dat; q=Y.q, weights=Y.weights, computew, kwargs...)
+	end
+	return f1, f2, w
+end
 
 """
     pairwise_frequencies(
@@ -177,6 +184,11 @@ function computeweights(
     return w
 end
 
+function computeweights!(Y::DCASample; theta=0.2)
+	Y.weights = computeweights(Y.dat, theta)
+	return Y.weights
+end
+
 """
     computeweights(Y; theta = 0.2, saveweights="")
 
@@ -220,5 +232,6 @@ function computeweights(Y::AbstractMatrix{<:Integer}, theta::Float64)
             end
         end
     end
-    return 1 ./ weights
+    weights = 1 ./ weights
+    return weights / sum(weights)
 end

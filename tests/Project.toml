@@ -1,4 +1,5 @@
 [deps]
+Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
 Crayons = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
 DCATools = "ab32c484-f013-491b-b55b-7691c773516c"
 FASTX = "c2308a5c-f048-11e8-3e8a-31650f418d12"

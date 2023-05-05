@@ -12,6 +12,8 @@ function read_msa_num(
 	index_style=1,
 	header=false,
 	mapping = DEFAULT_AA_MAPPING,
+	compute_weights = false,
+	theta = 0.2,
 	q = 0,
 )
 	Y = nothing
@@ -38,7 +40,9 @@ function read_msa_num(
 		q = maximum(Y)
 	end
 
-	return DCASample(Y, q, mapping)
+	weights = compute_weights ? computeweights(Y, theta) : ones(size(Y, 1))/size(Y,1)
+
+	X = DCASample(Y, q, mapping, weights)
 end
 
 """
@@ -46,13 +50,16 @@ end
 
 Read a fasta file into a `DCASample` object.
 """
-function read_msa(fastafile::AbstractString; mapping = DEFAULT_AA_MAPPING)
+function read_msa(
+	fastafile::AbstractString;
+	mapping = DEFAULT_AA_MAPPING, compute_weights = false, theta = 0.2)
 	mapdict = Dict(x=>findfirst(a->a==x, mapping) for x in mapping)
 
 	fasta = FASTA.Reader(open(fastafile, "r"))
 	Y = vcat(map(x -> map_aa_seq(sequence(x), mapdict)', fasta)...)
 	q = length(mapping)
-	return DCASample(Y, q, mapping)
+	weights = compute_weights ? computeweights(Y, theta) : ones(size(Y, 1))/size(Y,1)
+	return DCASample(Y, q, mapping, weights)
 end
 
 map_aa_seq(s; mapping = DEFAULT_AA_MAPPING) = map_aa_seq(s, mapping)

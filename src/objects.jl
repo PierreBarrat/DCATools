@@ -136,22 +136,32 @@ Base.@kwdef mutable struct DCASample
 	dat::Matrix{Int}
 	q :: Int = length(mapping)
 	mapping :: String = DEFAULT_AA_MAPPING
-	function DCASample(dat, q, mapping)
+	weights :: Vector{Float64} = ones(size(dat,1))/size(dat,1)
+	function DCASample(dat, q, mapping, weights)
 		@assert isempty(mapping) || q == length(mapping) "Inconsistent size for mapping $mapping and q=$q.
 		Use `mapping=\"\"` if you do not care about the mapping."
-		new(dat, q, mapping)
+		@assert all(map(>(0), weights)) "Weights cannot be negative"
+		@assert isapprox(sum(weights), 1) "Weights must sum to 1"
+		new(dat, q, mapping, weights)
 	end
 end
 
-DCASample(Y, q; mapping = DEFAULT_AA_MAPPING) = DCASample(Y, q, mapping)
+function DCASample(Y, q; mapping = DEFAULT_AA_MAPPING, weights=ones(size(Y,1))/size(Y,1))
+	return DCASample(Y, q, mapping, weights)
+end
 
 Base.size(X::DCASample) = size(X.dat)
+Base.size(X::DCASample, i::Int) = size(X.dat, i)
 
 function Base.show(io::IO, X::DCASample)
 	M, L = size(X)
 	print(io, "Alignment of $M sequences of length $L - ")
 	show(io, X.dat)
 end
-Base.show(io::IO, x::MIME"text/plain", X::DCASample) = show(io, x, X.dat)
+function Base.show(io::IO, x::MIME"text/plain", X::DCASample)
+	M, L = size(X)
+	println(io, "Alignment of $M sequences of length $L")
+	show(io, x, X.dat)
+end
 
 eachsequence(X::DCASample) = eachrow(X.dat)

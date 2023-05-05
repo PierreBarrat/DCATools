@@ -1,5 +1,6 @@
 # print("\n\n ---  ---\n\n")
 
+using Chain
 using DCATools
 using DelimitedFiles
 using Test
@@ -25,8 +26,8 @@ fnw_2 = readdlm(testdir * "aligntools/freqs_nw.txt", Float64)
 fnw_1 = fnw_2[end,:]
 fnw_2 = fnw_2[1:(end-1),:]
 
-ww = [1.,1.]
-wnw = [0.5, 0.5, 1.]
+ww = [1.,1.]/2
+wnw = @chain [0.5, 0.5, 1.] _/sum(_)
 
 Yu = read_msa_num(testdir * "aligntools/msa_n3q2_unique.txt"; mapping="")
 Ynu = read_msa_num(testdir * "aligntools/msa_n3q2_nonunique.txt", mapping="")
