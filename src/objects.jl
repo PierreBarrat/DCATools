@@ -17,18 +17,17 @@ Base.@kwdef mutable struct DCAGraph
     q::Int
     J::Array{Float64,2} = zeros(Float64, L*q, L*q)
     h::Array{Float64,1} = zeros(Float64, L*q)
-    mapping::String = DEFAULT_AA_MAPPING
+    mapping::String = DEFAULT_MAPPING(q)
 end
 
 function DCAGraph(
 	J::AbstractArray{<:Real, 4}, h::AbstractArray{<:Real, 2};
-	mapping = DEFAULT_AA_MAPPING,
+	q = size(J,3), mapping = DEFAULT_MAPPING(q),
 )
 	@assert size(J,3) == size(J,4) == size(h,2) "Incoherent sizes for J and h" size(J) size(h)
 	@assert size(J,1) == size(J,2) == size(h,1) "Incoherent sizes for J and h" size(J) size(h)
 
 	L = size(J,1)
-	q = size(J,3)
 
 	J_ = zeros(L*q, L*q)
 	for i in 1:L, j in i:L
@@ -131,37 +130,64 @@ Base.setindex!(g::DCAGraph, val, i::Colon, a) = (g.h[(0:g.L-1)*g.q .+ a] .= val)
 Base.setindex!(g::DCAGraph, val, i::Colon, a::Colon) = (g.h[:] .= val)
 
 
+"""
+	mutable struct DCASample
 
+```
+dat::Matrix{Int}
+q::Int = length(mapping)
+mapping::String = DCATools.DEFAULT_AA_MAPPING
+weights::Vector{Float64} = ones(size(dat,1))/size(dat,1)
+```
+
+Stores sequences or a sample of a DCA model. `dat` stores sequences/samples in *columns*:
+`eachcol(X.dat)` will iterate over sequences.
+
+**Important**: When built from a matrix, will *transpose* the input; if `size(dat) = (M, L)`,
+`X=DCASample(dat)` will return an object with `size(X.dat) = (L, M)`. In other words, assumes
+that the input matrix has sequences as rows.
+"""
 Base.@kwdef mutable struct DCASample
 	dat::Matrix{Int}
-	q :: Int = length(mapping)
-	mapping :: String = DEFAULT_AA_MAPPING
-	weights :: Vector{Float64} = ones(size(dat,1))/size(dat,1)
+	q::Int = 21
+	mapping::String = DEFAULT_MAPPING(q)
+	weights::Vector{Float64} = ones(size(dat,1))/size(dat,1)
 	function DCASample(dat, q, mapping, weights)
 		@assert isempty(mapping) || q == length(mapping) "Inconsistent size for mapping $mapping and q=$q.
 		Use `mapping=\"\"` if you do not care about the mapping."
+		@assert length(weights) == size(dat, 1) "inconsistent number of weights"
 		@assert all(map(>(0), weights)) "Weights cannot be negative"
 		@assert isapprox(sum(weights), 1) "Weights must sum to 1"
-		new(dat, q, mapping, weights)
+		new(Matrix(dat'), q, mapping, weights)
 	end
 end
 
-function DCASample(Y, q; mapping = DEFAULT_AA_MAPPING, weights=ones(size(Y,1))/size(Y,1))
-	return DCASample(Y, q, mapping, weights)
+DCASample(Y; kwargs...) = DCASample(dat=Y; kwargs...)
+function DCASample(Y, q; kwargs...)
+	DCASample(dat=Y; q, kwargs...)
 end
 
+
+Base.iterate(X::DCASample) = iterate(eachcol(X.dat))
+Base.iterate(X::DCASample, state) = iterate(eachcol(X.dat), state)
+Base.eltype(::Type{DCASample}) = AbstractVector{Int}
+Base.length(X::DCASample) = size(X.dat, 2)
 Base.size(X::DCASample) = size(X.dat)
 Base.size(X::DCASample, i::Int) = size(X.dat, i)
+
+Base.getindex(X::DCASample, i::Int) = X.dat[:, i]
+Base.firstindex(::DCASample) = 1
+Base.lastindex(X::DCASample) = length(X)
 
 function Base.show(io::IO, X::DCASample)
 	M, L = size(X)
 	print(io, "Alignment of $M sequences of length $L - ")
-	show(io, X.dat)
+	show(io, X.dat')
 end
 function Base.show(io::IO, x::MIME"text/plain", X::DCASample)
-	M, L = size(X)
+	L, M = size(X)
 	println(io, "Alignment of $M sequences of length $L")
-	show(io, x, X.dat)
+	show(io, x, X.dat')
 end
 
-eachsequence(X::DCASample) = eachrow(X.dat)
+eachsequence(X::DCASample) = eachcol(X.dat)

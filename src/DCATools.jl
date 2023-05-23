@@ -7,7 +7,7 @@ using Printf
 using Random
 using Statistics
 
-import Base: *, getindex, setindex!, size, write, show
+import Base: *, firstindex, lastindex, getindex, iterate, length, eltype, setindex!, size, write, show
 
 include("global.jl")
 export DEFAULT_AA_MAPPING

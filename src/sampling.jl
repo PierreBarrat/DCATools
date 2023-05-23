@@ -21,8 +21,7 @@ Sample `M` configurations from probability distribution defined by `graph`.
 - `outfile`: File path to save sample as a csv. Empty string to not save.
 """
 function sample(
-	graph::DCAGraph,
-	M;
+	graph::DCAGraph, M;
 	init = rand(1:graph.q, graph.L),
 	Twait = 1,
 	burnin = 5*Twait,
@@ -73,7 +72,7 @@ function sample(
     if outfile!=""
     	writedlm(outfile, sample, ' ')
     end
-    return sample
+    return DCASample(sample, graph.q; mapping = graph.mapping)
 end
 
 

@@ -9,30 +9,30 @@ function pairwise_frequencies(Y, w::Array{Float64,1}, q)
         w = vec(w)
     end
 
-    (M,L) = size(Y)
+    (L, M) = size(Y)
     f2 = zeros(Float64, L*q, L*q)
     f1 = zeros(Float64, L*q)
 
-    if size(w)[1]!=M
+    if length(w) != M
         error("incorrect number of weights\n")
     end
-
     Meff = sum(w)
-    for m in 1:M
-        for j in 1:L
-            f1[(j-1)*q + Y[m,j]] += w[m]
-            f2[(j-1)*q + Y[m,j], (j-1)*q + Y[m,j]] += w[m]
-            for i in (j+1):L
-                f2[(i-1)*q + Y[m,i], (j-1)*q + Y[m,j]] += w[m]
-                f2[(j-1)*q + Y[m,j], (i-1)*q + Y[m,i]] += w[m]
-            end
-        end
-    end
 
+    # off diagonal f2
+    for m in 1:M, i in 1:L, j in (i+1):L
+        f2[(i-1)*q + Y[i, m], (j-1)*q + Y[j, m]] += w[m]
+	end
+	f2 .= f2 .+ f2'
+
+	# f1 and diagonal f2
+    for m in 1:M, i in 1:L
+    	f1[(i-1)*q + Y[i, m]] += w[m]
+        f2[(i-1)*q + Y[i, m], (i-1)*q + Y[i, m]] += w[m]
+    end
     f2 = f2 ./ Meff
     f1 = f1 ./ Meff
 
-    return (f1,f2)
+    return (f1, f2)
 end
 
 
@@ -42,7 +42,7 @@ end
     	q = findmax(Y)[1], computew=false, weights=[], theta=0.2, saveweights="", pc=0.
     )
 
-Compute pairwise frequencies for an array input. Lines of `Y` represent sequences.
+Compute pairwise frequencies for an array input. Columns of `Y` represent sequences.
 Return frequencies `f1` and `f2` and weights.
 
 ## Kwargs:
@@ -68,12 +68,12 @@ function pairwise_frequencies(
     else
         if weights == []
             # no weights used
-            w = ones(Float64, size(Y,1))
+            w = ones(Float64, size(Y,2))
         elseif typeof(weights) == String
             # read them from file
             w = vec(readdlm(weights, Float64))
         elseif typeof(weights) == Array{Float64,1}
-            # read them from the array
+            # read them from the array
             w = weights
         elseif typeof(weights) == Array{Float64,2}
             w = vec(weights)
@@ -82,9 +82,9 @@ function pairwise_frequencies(
             @warn "unrecognized format for keyword `weights`"
         end
     end
-    if size(w,1)!=size(Y,1)
+    if length(w) != size(Y,2)
         error("incorrect size for `weights`: \
-        	$(length(weights)) weights vs $(size(Y)[1]) sequences")
+        	$(length(weights)) weights vs $(size(Y,2)) sequences")
     end
 
     (f1, f2) = pairwise_frequencies(Y, w, q)
@@ -213,7 +213,6 @@ computeweights(Y::DCASample; kwargs...) = computeweights(Y.dat; kwargs...)
 Basic routine. Compute weights of sequences in alignment `Y`, using threshold `theta`.
 """
 function computeweights(Y::AbstractMatrix{<:Integer}, theta::Float64)
-    Y = Y';
     L, M = size(Y)
     h = L * (1-theta)
     weights = ones(Float64, M);
