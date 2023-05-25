@@ -94,4 +94,27 @@ function pdist(Y::Matrix{<:Integer})
         end
     end
     return out + out'
+function write(file::AbstractString, S::DCASample; map=true, kwargs...)
+	if map
+		_write_fasta(file, S)
+	else
+		_write_num(file, S; kwargs...)
+	end
+end
+function _write_fasta(file::AbstractString, S::DCASample)
+	FASTAWriter(open(file, "w")) do io
+		for (i,s) in enumerate(S)
+			rec = FASTARecord("$i", DCATools.map_seq_to_aa(s; mapping = S.mapping))
+			write(io, rec)
+		end
+	end
+end
+function _write_num(file::AbstractString, S::DCASample; header=false)
+	open(file, "w") do io
+		if header
+			L = lenseq(S)
+			write(io, "$L $(S.q)")
+		end
+		writedlm(io, S.dat', ' ')
+	end
 end

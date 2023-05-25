@@ -131,35 +131,24 @@ energy(g::DCAGraph, S::Matrix{Int}) = map(s -> energy(g,s), eachrow(S))
 
 
 """
-    profile_model(Y::Array{Int,2}; q=findmax(Y)[1], pc = 1e-5, weights=[], save=filename)
+    profile_model(X::DCASample; pc = 1e-5)
 
-Infer profile model from alignment `Y`. 
-
-Keywords:
-- `q`: Default to maximum value in `Y`. 
-- `weights`: see `pairwise_frequencies`
+Infer profile model from alignment `X`.
 """
-function profile_model(
-	msa::Array{Int,2};
-	q=findmax(msa)[1],
-	pc = 1e-5,
-	weights=[],
-	save="",
-)
-    f1 = pairwise_frequencies(msa, q=q, weights=weights)[1]
-    return profile_model(f1, q, pc=pc, save=save)
+function profile_model(X::DCASample; pc = 1e-5)
+    f1, _ = pairwise_frequencies(X)
+    return profile_model(f1, X.q, pc=pc)
 end
 
 """
-    profile_model(f1::Array{Float64,1}, q; pc = 1e-5, save=filename)
+    profile_model(f1::Array{Float64,1}; pc = 1e-5)
 
 Infer profile model from frequencies `f1`.
 
 Keywords:
 - `pc`: Pseudocount ratio. Defaults to `1e-5`.
-- save: File to save inferred profile.
 """
-function profile_model(f1::Array{Float64,1}, q; pc = 1e-5, save="")
+function profile_model(f1::Array{Float64,1}, q; pc = 1e-5)
     L = Int(size(f1,1)/q)
 
     h = log.((1-pc)*f1 .+ pc/q)
@@ -167,10 +156,6 @@ function profile_model(f1::Array{Float64,1}, q; pc = 1e-5, save="")
         h[(i-1)*q .+ (1:q)] .-= mean(h[(i-1)*q .+ (1:q)])
     end
     g = DCAGraph(; L, q, J=zeros(L*q,L*q), h)
-
-    if save != ""
-    	write(save, g)
-    end
 
     return g
 end

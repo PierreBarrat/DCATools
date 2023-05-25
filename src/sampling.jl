@@ -111,6 +111,11 @@ function mcmc_step!(conf, jdx, g::DCAGraph; rng = Random.GLOBAL_RNG)
 		jdx[i] = (i-1)*q + b
 	end
 end
+"""
+	mcmc_step!(conf, g::DCAGraph)
+
+Propose a random flip in `conf`.
+"""
 function mcmc_step!(conf, g::DCAGraph; rng = Random.GLOBAL_RNG)
 	E = 0.
 	q, L = size(g)

@@ -171,13 +171,14 @@ end
 Base.iterate(X::DCASample) = iterate(eachcol(X.dat))
 Base.iterate(X::DCASample, state) = iterate(eachcol(X.dat), state)
 Base.eltype(::Type{DCASample}) = AbstractVector{Int}
-Base.length(X::DCASample) = size(X.dat, 2)
 Base.size(X::DCASample) = size(X.dat)
 Base.size(X::DCASample, i::Int) = size(X.dat, i)
+Base.length(X::DCASample) = size(X, 2)
 
-Base.getindex(X::DCASample, i::Int) = X.dat[:, i]
+Base.getindex(X::DCASample, i) = X.dat[:, i]
 Base.firstindex(::DCASample) = 1
 Base.lastindex(X::DCASample) = length(X)
+Base.view(X::DCASample, i) = view(X.dat, :, i)
 
 function Base.show(io::IO, X::DCASample)
 	M, L = size(X)
@@ -191,3 +192,4 @@ function Base.show(io::IO, x::MIME"text/plain", X::DCASample)
 end
 
 eachsequence(X::DCASample) = eachcol(X.dat)
+lenseq(X::DCASample) = size(X, 1)
