@@ -80,20 +80,30 @@ end
 map_seq_to_aa(s; mapping = DEFAULT_AA_MAPPING) = map_seq_to_aa(s, mapping)
 
 """
-    pdist(Y::Matrix{<:Integer})
+    pw_hamming_distance(Y::DCASample; normalize=true, step=1)
 
-Pairwise hamming distance between sequences in lines of `Y`.
+Pairwise hamming distance between sequences in `Y`. For `M` sequences, return a vector of
+length `M(M-1)/2`. Only considers sequences at index `1:step:end` (useful for large
+alignments).
 """
-function pdist(Y::Matrix{<:Integer})
-    M = size(Y,1)
-    Yt = Y'
-    out = zeros(Int64, M, M)
-    for m1 in 1:M
-        for m2 in (m1+1):M
-            out[m2,m1] = hamming(Yt[:,m1], Yt[:,m2])
-        end
+function pw_hamming_distance(Y::DCASample; normalize=true, step=1)
+    L, M = size(Y)
+    out = if step == 1
+    	Vector{Float64}(undef, Int(M*(M-1)/2))
+    else
+    	N = sum(m1 -> length((m1+1):step:M), 1:step:M)
+    	Vector{Float64}(undef, N)
     end
-    return out + out'
+    i = 1
+    for m1 in 1:step:M, m2 in (m1+1):step:M
+		out[i] = hamming(view(Y, m1), view(Y, m2))
+		i += 1
+    end
+
+    return normalize ? out / L : out
+end
+
+
 function write(file::AbstractString, S::DCASample; map=true, kwargs...)
 	if map
 		_write_fasta(file, S)

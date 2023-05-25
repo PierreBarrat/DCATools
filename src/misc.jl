@@ -256,7 +256,9 @@ end
 function hamming(X,Y)
     S = 0
     for (x,y) in zip(X,Y)
-        S += (x != y)
+        if x != y
+        	S += 1
+        end
     end
     return S
 end

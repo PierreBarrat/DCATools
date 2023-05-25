@@ -1,4 +1,20 @@
 """
+	profile_frequency(X::DCASample)
+
+Single site frequencies of `X`.
+"""
+function profile_frequency(X::DCASample)
+	q = X.q
+	(L, M) = size(X)
+
+	f1 = zeros(Float64, L*q)
+	for (m, s) in enumerate(X), (i, a) in enumerate(s)
+		f1[(i-1)*q + a] += X.weights[m]
+	end
+
+	return f1
+end
+"""
     pairwise_frequencies(Y::Matrix{<:Integer}, w::Array{Float64,1}, q::Integer)
 
 Base routine for computing frequencies in sample `Y`. `w` is an array containing the weights.

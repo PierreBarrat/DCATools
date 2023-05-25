@@ -23,7 +23,7 @@ include("alignment_tools.jl")
 export read_msa_num, read_msa
 
 include("alignment_frequencies.jl")
-export pairwise_frequencies, computeweights
+export pairwise_frequencies, profile_frequencies, computeweights
 
 include("modeltools.jl")
 export switchgauge!, energy
