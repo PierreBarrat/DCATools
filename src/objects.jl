@@ -17,12 +17,12 @@ Base.@kwdef mutable struct DCAGraph
     q::Int
     J::Array{Float64,2} = zeros(Float64, L*q, L*q)
     h::Array{Float64,1} = zeros(Float64, L*q)
-    mapping::String = DEFAULT_MAPPING(q)
+    mapping::Dict = default_mapping(q)
 end
 
 function DCAGraph(
 	J::AbstractArray{<:Real, 4}, h::AbstractArray{<:Real, 2};
-	q = size(J,3), mapping = DEFAULT_MAPPING(q),
+	q = size(J,3), mapping = default_mapping(q),
 )
 	@assert size(J,3) == size(J,4) == size(h,2) "Incoherent sizes for J and h" size(J) size(h)
 	@assert size(J,1) == size(J,2) == size(h,1) "Incoherent sizes for J and h" size(J) size(h)
@@ -66,7 +66,7 @@ The output matrix is made symetric with zeroes on the diagonal blocks.
 function DCAGraph(
 	L, q;
 	init = :null, Jrand = N -> 1/L*randn(N,N), hrand = N -> 1/sqrt(L)*randn(N),
-	mapping = DEFAULT_AA_MAPPING,
+	mapping = default_mapping(q),
 )
 	if init == :null
 		DCAGraph(L, q, zeros(Float64, L*q, L*q), zeros(Float64, L*q), mapping)
@@ -136,12 +136,21 @@ Base.setindex!(g::DCAGraph, val, i::Colon, a::Colon) = (g.h[:] .= val)
 ```
     dat::Matrix{Int}
     q::Int = 21
-    mapping::String = DCATools.DEFAULT_MAPPING(q)
-    weights::Vector{Float64} = ones(size(dat,1))/size(dat,1) # sums to 1
+    mapping::Dict{Int, Char} = default_mapping(q)
+    weights::Vector{Float64} = ones(size(dat,1))/size(dat,1) # phylogenetic weights of sequences
 ```
 
 Stores sequences or a sample of a DCA model. `dat` stores sequences/samples in *columns*:
 `eachcol(X.dat)` will iterate over sequences.
+
+`mapping` is a dictionary mapping integers in `dat` to `Char` (amino acids, nucleotides, etc...).
+A string can be passed instead of a `Dict`, in which case `DCATools.compute_mapping` will
+be called.
+
+The constraints on the fields are:
+- `dat` must contain strictly positive integers, smaller than `q`.;
+- the length of `mapping` must be equal to `q` or to `0` (empty mapping is okay);
+- `weights` must sum to one and have positive elements.
 
 **Important**: When built from a matrix, will *transpose* the input; if `size(dat) = (M, L)`,
 `X=DCASample(dat)` will return an object with `size(X.dat) = (L, M)`. In other words, assumes
@@ -159,17 +168,27 @@ that the input matrix has sequences as rows.
 Base.@kwdef mutable struct DCASample
 	dat::Matrix{Int}
 	q::Int = 21
-	mapping::String = DEFAULT_MAPPING(q)
+	mapping::Dict{Int, Char} = default_mapping(q)
 	weights::Vector{Float64} = ones(size(dat,1))/size(dat,1)
+
 	function DCASample(dat, q, mapping, weights)
+        # dat
+        @assert all(>(0), dat) "data must be a matrix/vector of strictly positive integers - got a zero or negative value"
+        @assert maximum(dat) <= q "values in `dat` must be smaller than `q`=$q - got $(maximum(dat))"
+        # mapping
 		@assert isempty(mapping) || q == length(mapping) "Inconsistent size for mapping $mapping and q=$q.
-		Use `mapping=\"\"` if you do not care about the mapping."
-		@assert length(weights) == size(dat, 1) "inconsistent number of weights"
-		@assert all(map(>(0), weights)) "Weights cannot be negative"
+		Use `mapping=Dict()` if you do not care about the mapping."
+        # weights
+		@assert length(weights) == size(dat, 1) "inconsistent number of weights: $(size(dat,1)) sequence and $(length(weights)) weights"
+		@assert all(>(0), weights) "Weights cannot be negative"
 		@assert isapprox(sum(weights), 1) "Weights must sum to 1"
+
 		new(Matrix(dat'), q, mapping, weights)
 	end
 end
+
+DCASample(Y, q, mapping::AbstractString, w) = DCASample(Y, q, compute_mapping(mapping), w)
+
 
 """
     DCASample(Y; q=21, kwargs...)
@@ -179,10 +198,10 @@ Build a sample from matrix or vector `Y`. Assume that `Y` has sequences as rows.
 
 Keyword arguments are the fields of `DCASample`.
 """
-DCASample(Y::AbstractMatrix; kwargs...) = DCASample(dat=Y; kwargs...)
-DCASample(Y::AbstractMatrix, q; kwargs...) = DCASample(Y; q, kwargs...)
-DCASample(s::AbstractVector; kwargs...) = DCASample(s[:,:]'; kwargs...)
-DCASample(s::AbstractVector, q; kwargs...) = DCASample(s; q, kwargs...)
+DCASample(Y::AbstractMatrix{<:Integer}; kwargs...) = DCASample(dat=Y; kwargs...)
+DCASample(Y::AbstractMatrix{<:Integer}, q; kwargs...) = DCASample(Y; q, kwargs...)
+DCASample(s::AbstractVector{<:Integer}; kwargs...) = DCASample(s[:,:]'; kwargs...)
+DCASample(s::AbstractVector{<:Integer}, q; kwargs...) = DCASample(s; q, kwargs...)
 
 Base.iterate(X::DCASample) = iterate(eachcol(X.dat))
 Base.iterate(X::DCASample, state) = iterate(eachcol(X.dat), state)

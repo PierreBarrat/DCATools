@@ -1,16 +1,20 @@
 """
-	read_msa_num(infile::AbstractString ; index_style=1, header=false, )
+	read_msa_num(
+        infile::AbstractString;
+        index_style=1, header=false, mapping::Dict, compute_weights=false, theta, q,
+    )
 
-Read an MSA stored in `infile` in a numerical index_style.
+Read an MSA stored in `infile` in a numerical index_style. Return a `DCASample` object.
+Kwargs `mapping` and `q` are passed to `DCASample`.
 
 If `index_style=1`, amino acids should be mapped from 1 to `q`.
 If `index_style=0`, they should be mapped from 0 to `q-1`.
-`header` argument allows for discarding the first line of `infile`.
+`header=true` discards the first line of the input file.
 """
 function read_msa_num(
 	infile::AbstractString;
-	index_style=1,
-	header=false,
+	index_style = 1,
+	header = false,
 	mapping = DEFAULT_AA_MAPPING,
 	compute_weights = false,
 	theta = 0.2,
@@ -52,32 +56,54 @@ Read a fasta file into a `DCASample` object.
 """
 function read_msa(
 	fastafile::AbstractString;
-	mapping = DEFAULT_AA_MAPPING, compute_weights = false, theta = 0.2)
-	mapdict = Dict(x=>findfirst(a->a==x, mapping) for x in mapping)
-
-	fasta = FASTA.Reader(open(fastafile, "r"))
-	Y = vcat(map(x -> map_aa_seq(sequence(x), mapdict)', fasta)...)
+	mapping = DEFAULT_AA_MAPPING, compute_weights = false, theta = 0.2,
+)
+    rev_mapping = Dict(c => i for (i,c) in mapping)
+    Y = let
+	    fasta = FASTA.Reader(open(fastafile, "r"))
+        vcat(map(x -> aa_to_num(sequence(x), rev_mapping)', fasta)...)
+    end
 	q = length(mapping)
 	weights = compute_weights ? computeweights(Y, theta) : ones(size(Y, 1))/size(Y,1)
+
 	return DCASample(Y, q, mapping, weights)
 end
 
-map_aa_seq(s; mapping = DEFAULT_AA_MAPPING) = map_aa_seq(s, mapping)
-function map_aa_seq(s::AbstractString, mapping::AbstractString)
-	mapdict = Dict(x=>findfirst(a->a==x, mapping) for x in mapping)
-	return map_aa_seq(s, mapdict)
+
+
+
+function write(file::AbstractString, S::DCASample; map=true, kwargs...)
+	if map
+		_write_fasta(file, S)
+	else
+		_write_num(file, S; kwargs...)
+	end
 end
-function map_aa_seq(s::AbstractString, mapping::AbstractDict)
-	return map(x -> get(mapping, x, 1), collect(s))
+function _write_fasta(file::AbstractString, S::DCASample)
+    try
+	    FASTAWriter(open(file, "w")) do io
+	    	for (i,s) in enumerate(S)
+	    		rec = FASTARecord("$i", DCATools.num_to_aa(s; mapping = S.mapping))
+	    		write(io, rec)
+	    	end
+	    end
+    catch err
+        @warn "There was a problem when writing sequences to files;
+        this could be due to an inadapted mapping, got $(S.mapping)."
+    end
 end
-"""
-	map_seq_to_aa(s::AbstractVector{Int}, mapping = DEFAULT_AA_MAPPING)
-	map_seq_to_aa(s; mapping = DEFAULT_AA_MAPPING)
-"""
-function map_seq_to_aa(s::AbstractVector{Int}, mapping = DEFAULT_AA_MAPPING)
-	return string(map(x -> mapping[x], s)...)
+function _write_num(file::AbstractString, S::DCASample; header=false)
+	open(file, "w") do io
+		if header
+			L = lenseq(S)
+			write(io, "$L $(S.q)")
+		end
+		writedlm(io, S.dat', ' ')
+	end
 end
-map_seq_to_aa(s; mapping = DEFAULT_AA_MAPPING) = map_seq_to_aa(s, mapping)
+
+
+
 
 """
     pw_hamming_distance(Y::DCASample; normalize=true, step=1)
@@ -108,46 +134,22 @@ function pw_hamming_distance(X::DCASample, Y::DCASample; normalize=true, step=1)
     L2, M2 = size(Y)
 
     if L1 != L2
-        throw(DimensionMismatch("samples must have the same sequence length: got $L1 != $L2"))
+        throw(
+            DimensionMismatch("samples must have the same sequence length: got $L1 != $L2")
+        )
     end
 
     out = if step == 1
-    	Vector{Float64}(undef, M1*M2)
+        Vector{Float64}(undef, M1*M2)
     else
-    	N = sum(m1 -> length(1:step:M1), 1:step:M2)
-    	Vector{Float64}(undef, N)
+        N = sum(m1 -> length(1:step:M1), 1:step:M2)
+        Vector{Float64}(undef, N)
     end
     i = 1
     for m1 in 1:step:M1, m2 in 1:step:M2
-		out[i] = hamming(view(X, m1), view(Y, m2))
-		i += 1
+        out[i] = hamming(view(X, m1), view(Y, m2))
+        i += 1
     end
 
     return normalize ? out / L1 : out
-end
-
-
-function write(file::AbstractString, S::DCASample; map=true, kwargs...)
-	if map
-		_write_fasta(file, S)
-	else
-		_write_num(file, S; kwargs...)
-	end
-end
-function _write_fasta(file::AbstractString, S::DCASample)
-	FASTAWriter(open(file, "w")) do io
-		for (i,s) in enumerate(S)
-			rec = FASTARecord("$i", DCATools.map_seq_to_aa(s; mapping = S.mapping))
-			write(io, rec)
-		end
-	end
-end
-function _write_num(file::AbstractString, S::DCASample; header=false)
-	open(file, "w") do io
-		if header
-			L = lenseq(S)
-			write(io, "$L $(S.q)")
-		end
-		writedlm(io, S.dat', ' ')
-	end
 end

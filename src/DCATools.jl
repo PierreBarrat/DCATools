@@ -9,8 +9,8 @@ using Statistics
 
 import Base: *, firstindex, lastindex, getindex, iterate, length, eltype, setindex!, size, write, show, view
 
-include("global.jl")
-export DEFAULT_AA_MAPPING
+include("sequence_mapping.jl")
+export default_mapping
 
 include("objects.jl")
 export DCAGraph, DCASample, eachsequence
