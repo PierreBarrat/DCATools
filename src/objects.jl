@@ -162,11 +162,16 @@ Base.@kwdef mutable struct DCASample
 	end
 end
 
-DCASample(Y; kwargs...) = DCASample(dat=Y; kwargs...)
-function DCASample(Y, q; kwargs...)
+"""
+    DCASample(Y; q=21, kwargs...)
+
+Build a sample from matrix or vector `Y`. Assume that `Y` has sequences as rows.
+"""
+DCASample(Y::AbstractMatrix; kwargs...) = DCASample(dat=Y; kwargs...)
+function DCASample(Y::AbstractMatrix, q; kwargs...)
 	DCASample(dat=Y; q, kwargs...)
 end
-
+DCASample(s::AbstractVector; kwargs...) = DCASample(s[:,:]'; kwargs...)
 
 Base.iterate(X::DCASample) = iterate(eachcol(X.dat))
 Base.iterate(X::DCASample, state) = iterate(eachcol(X.dat), state)
@@ -192,4 +197,3 @@ function Base.show(io::IO, x::MIME"text/plain", X::DCASample)
 end
 
 eachsequence(X::DCASample) = eachcol(X.dat)
-lenseq(X::DCASample) = size(X, 1)

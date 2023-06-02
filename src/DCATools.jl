@@ -13,7 +13,7 @@ include("global.jl")
 export DEFAULT_AA_MAPPING
 
 include("objects.jl")
-export DCAGraph, DCASample
+export DCAGraph, DCASample, eachsequence
 
 
 include("IO.jl")
@@ -23,7 +23,7 @@ include("alignment_tools.jl")
 export read_msa_num, read_msa
 
 include("alignment_frequencies.jl")
-export pairwise_frequencies, profile_frequencies, computeweights
+export pairwise_frequencies, profile_frequency, computeweights
 
 include("modeltools.jl")
 export switchgauge!, energy
