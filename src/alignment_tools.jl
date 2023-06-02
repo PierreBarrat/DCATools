@@ -89,18 +89,41 @@ alignments).
 function pw_hamming_distance(Y::DCASample; normalize=true, step=1)
     L, M = size(Y)
     out = if step == 1
-    	Vector{Float64}(undef, Int(M*(M-1)/2))
+        Vector{Float64}(undef, Int(M*(M-1)/2))
     else
-    	N = sum(m1 -> length((m1+1):step:M), 1:step:M)
-    	Vector{Float64}(undef, N)
+        N = sum(m1 -> length((m1+1):step:M), 1:step:M)
+        Vector{Float64}(undef, N)
     end
     i = 1
     for m1 in 1:step:M, m2 in (m1+1):step:M
-		out[i] = hamming(view(Y, m1), view(Y, m2))
-		i += 1
+        out[i] = hamming(view(Y, m1), view(Y, m2))
+        i += 1
     end
 
     return normalize ? out / L : out
+end
+
+function pw_hamming_distance(X::DCASample, Y::DCASample; normalize=true, step=1)
+    L1, M1 = size(X)
+    L2, M2 = size(Y)
+
+    if L1 != L2
+        throw(DimensionMismatch("samples must have the same sequence length: got $L1 != $L2"))
+    end
+
+    out = if step == 1
+    	Vector{Float64}(undef, M1*M2)
+    else
+    	N = sum(m1 -> length(1:step:M1), 1:step:M2)
+    	Vector{Float64}(undef, N)
+    end
+    i = 1
+    for m1 in 1:step:M1, m2 in 1:step:M2
+		out[i] = hamming(view(X, m1), view(Y, m2))
+		i += 1
+    end
+
+    return normalize ? out / L1 : out
 end
 
 
