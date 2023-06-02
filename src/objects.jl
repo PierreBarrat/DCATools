@@ -197,3 +197,17 @@ function Base.show(io::IO, x::MIME"text/plain", X::DCASample)
 end
 
 eachsequence(X::DCASample) = eachcol(X.dat)
+eachsequence_weighted(X::DCASample) = zip(eachsequences(X), X.weights)
+
+function subsample(X::DCASample, i::Int)
+    dat = reshape(X[i], length(X[i]))
+    w = [1]
+    return DCASample(dat; q=X.q, mapping=X.mapping, weights = w)
+end
+
+function subsample(X::DCASample, idx)
+    dat = X[idx]'
+    w = X.weights[idx]
+    w /= sum(w)
+    return DCASample(dat, X.q; mapping=X.mapping, weights = w)
+end
