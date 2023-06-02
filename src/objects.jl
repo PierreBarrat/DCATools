@@ -134,10 +134,10 @@ Base.setindex!(g::DCAGraph, val, i::Colon, a::Colon) = (g.h[:] .= val)
 	mutable struct DCASample
 
 ```
-dat::Matrix{Int}
-q::Int = length(mapping)
-mapping::String = DCATools.DEFAULT_AA_MAPPING
-weights::Vector{Float64} = ones(size(dat,1))/size(dat,1)
+    dat::Matrix{Int}
+    q::Int = 21
+    mapping::String = DCATools.DEFAULT_MAPPING(q)
+    weights::Vector{Float64} = ones(size(dat,1))/size(dat,1) # sums to 1
 ```
 
 Stores sequences or a sample of a DCA model. `dat` stores sequences/samples in *columns*:
@@ -146,6 +146,15 @@ Stores sequences or a sample of a DCA model. `dat` stores sequences/samples in *
 **Important**: When built from a matrix, will *transpose* the input; if `size(dat) = (M, L)`,
 `X=DCASample(dat)` will return an object with `size(X.dat) = (L, M)`. In other words, assumes
 that the input matrix has sequences as rows.
+
+## Methods
+
+- `getindex(X::DCASample, i)` returns a matrix/vector `X.dat[:, i]`.
+- `for s in X::DCASample` iterates over sequences.
+- `eachsequence(X::DCASample)` returns an iterator over sequences (`Vector{Int}`).
+- `eachsequence_weighted(X::DCASample)` returns an iterator over sequences and weights.
+- `subsample(X::DCASample, i)` constructs the subsample defined by index `i`.
+
 """
 Base.@kwdef mutable struct DCASample
 	dat::Matrix{Int}
@@ -164,14 +173,16 @@ end
 
 """
     DCASample(Y; q=21, kwargs...)
+    DCASample(Y, q; kwargs...)
 
 Build a sample from matrix or vector `Y`. Assume that `Y` has sequences as rows.
+
+Keyword arguments are the fields of `DCASample`.
 """
 DCASample(Y::AbstractMatrix; kwargs...) = DCASample(dat=Y; kwargs...)
-function DCASample(Y::AbstractMatrix, q; kwargs...)
-	DCASample(dat=Y; q, kwargs...)
-end
+DCASample(Y::AbstractMatrix, q; kwargs...) = DCASample(Y; q, kwargs...)
 DCASample(s::AbstractVector; kwargs...) = DCASample(s[:,:]'; kwargs...)
+DCASample(s::AbstractVector, q; kwargs...) = DCASample(s; q, kwargs...)
 
 Base.iterate(X::DCASample) = iterate(eachcol(X.dat))
 Base.iterate(X::DCASample, state) = iterate(eachcol(X.dat), state)
@@ -184,6 +195,8 @@ Base.getindex(X::DCASample, i) = X.dat[:, i]
 Base.firstindex(::DCASample) = 1
 Base.lastindex(X::DCASample) = length(X)
 Base.view(X::DCASample, i) = view(X.dat, :, i)
+
+
 
 function Base.show(io::IO, X::DCASample)
 	M, L = size(X)
@@ -204,7 +217,6 @@ function subsample(X::DCASample, i::Int)
     w = [1]
     return DCASample(dat; q=X.q, mapping=X.mapping, weights = w)
 end
-
 function subsample(X::DCASample, idx)
     dat = X[idx]'
     w = X.weights[idx]
