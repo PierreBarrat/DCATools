@@ -23,6 +23,7 @@ Sample `M` configurations from probability distribution defined by `graph`.
 function sample(
 	graph::DCAGraph, M;
 	init = rand(1:graph.q, graph.L),
+    step_type = :metropolis,
 	Twait = 1,
 	burnin = 5*Twait,
 	beta = 1.0,
@@ -50,7 +51,7 @@ function sample(
     # Burnin
     sample = zeros(Int, M, L)
     for t in 1:burnin
-    	mcmc_sweep!(conf, jdx, graph_local; rng)
+    	mcmc_sweep!(conf, jdx, graph_local; rng, step_type)
     end
     sample[1,:] = conf
     verbose ? println("done!") : print("")
@@ -62,7 +63,7 @@ function sample(
             @printf("It %d/%d           \r", m+1, M)
         end
         for t in 1:Twait
-        	mcmc_sweep!(conf, jdx, graph_local; rng)
+        	mcmc_sweep!(conf, jdx, graph_local; rng, step_type)
         end
         sample[m,:] .= conf
     end
@@ -76,20 +77,113 @@ function sample(
 end
 
 
-function mcmc_sweep!(conf, jdx, g; rng = Random.GLOBAL_RNG)
+function mcmc_sweep!(conf, jdx, g; step_type = :metropolis, rng = Random.GLOBAL_RNG)
 	q, L = size(g)
 	@assert length(conf) == L "Configuration and graph have incompatible sizes\
 		(respectively $(length(conf)) and $L"
 	for rep in 1:L
-		mcmc_step!(conf, jdx, g; rng)
+		mcmc_step!(conf, jdx, g; step_type, rng)
 	end
 	return nothing
 end
 
 #=
 Note: `jdx` contains precomputed indices for `conf`, of the form `(j-1)*q + conf[j]`
+All the step! functions have two forms (with mostly duplicated code). I could not figure out
+how to do better
 =#
-function mcmc_step!(conf, jdx, g::DCAGraph; rng = Random.GLOBAL_RNG)
+function mcmc_step!(conf, jdx, g; step_type = :metropolis, rng = Random.GLOBAL_RNG)
+    return if step_type == :metropolis
+        metropolis_step!(conf, jdx, g; rng)
+    elseif step_type == :gibbs
+        gibbs_step!(conf, jdx, g; rng)
+    else
+        throw(ErrorException("Unrecognized MCMC step type $(step_type)"))
+    end
+end
+function mcmc_step!(conf, g; step_type = :metropolis, rng = Random.GLOBAL_RNG)
+    return if step_type == :metropolis
+        metropolis_step!(conf, g; rng)
+    elseif step_type == :gibbs
+        gibbs_step!(conf, g; rng)
+    else
+        throw(ErrorException("Unrecognized MCMC step type $(step_type)"))
+    end
+end
+
+function gibbs_step!(conf, jdx, g::DCAGraph; rng = Random.GLOBAL_RNG)
+    q, L = size(g)
+
+    # Flip position
+    i = rand(rng, 1:L)
+    a = conf[i] # initial state
+
+    # constructing local landscape
+    P = map(1:q) do b
+        id_i_b = (i-1)*q+b # precomputed index for (i,b)
+        # ΔE
+        E = g.h[jdx[i]] - g.h[id_i_b]
+        for j = 1:L
+            if j != i
+                E += g.J[jdx[i], jdx[j]] - g.J[id_i_b, jdx[j]]
+            end
+        end
+        exp(-E)
+    end
+    P /= sum(P)
+
+    # picking from P
+    x = rand()
+    b = 1
+    Z = P[b]
+    while x > Z
+        # @info b x P
+        b += 1
+        Z += P[b]
+    end
+
+    conf[i] = b
+    jdx[i] = (i-1)*q + b
+
+    return true
+end
+function gibbs_step!(conf, g::DCAGraph; rng = Random.GLOBAL_RNG)
+    q, L = size(g)
+
+    # Flip position
+    i = rand(rng, 1:L)
+    a = conf[i] # initial state
+
+    # constructing local landscape
+    P = map(1:q) do b
+        id_i_b = (i-1)*q+b # precomputed index for (i,b)
+        # ΔE
+        E = g.h[(i-1)*g.q + conf[i]] - g.h[id_i_b]
+        for j = 1:L
+            if j != i
+                E += g.J[(i-1)*g.q + conf[i], (j-1)*g.q + conf[j]] - g.J[id_i_b, (j-1)*g.q + conf[j]]
+            end
+        end
+        exp(-E)
+    end
+    P /= sum(P)
+
+    # picking from P
+    x = rand()
+    b = 1
+    Z = P[b]
+    while x > Z
+        # @info b x P
+        b += 1
+        Z += P[b]
+    end
+    conf[i] = b
+
+    return true
+end
+
+
+function metropolis_step!(conf, jdx, g::DCAGraph; rng = Random.GLOBAL_RNG)
 	E = 0.
 	q, L = size(g)
 
@@ -106,17 +200,20 @@ function mcmc_step!(conf, jdx, g::DCAGraph; rng = Random.GLOBAL_RNG)
 		end
 	end
 
-	if E<=0. || exp(-E) > rand()
+	return if E<=0. || exp(-E) > rand()
 		conf[i] = b
 		jdx[i] = (i-1)*q + b
-	end
+        true
+	else
+        false
+    end
 end
 """
-	mcmc_step!(conf, g::DCAGraph)
+	metropolis_step!(conf, g::DCAGraph)
 
 Propose a random flip in `conf`.
 """
-function mcmc_step!(conf, g::DCAGraph; rng = Random.GLOBAL_RNG)
+function metropolis_step!(conf, g::DCAGraph; rng = Random.GLOBAL_RNG)
 	E = 0.
 	q, L = size(g)
 
@@ -133,14 +230,14 @@ function mcmc_step!(conf, g::DCAGraph; rng = Random.GLOBAL_RNG)
 		end
 	end
 
-	if E<=0. || exp(-E) > rand()
+	return if E<=0. || exp(-E) > rand()
 		@debug "accept"
 		conf[i] = b
+        true
+    else
+        false
 	end
 end
-
-
-
 
 """
 	autocorr(sample::Array{Int64,2}, q::Int64)
