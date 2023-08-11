@@ -215,6 +215,15 @@ Base.firstindex(::DCASample) = 1
 Base.lastindex(X::DCASample) = length(X)
 Base.view(X::DCASample, i) = view(X.dat, :, i)
 
+function Base.copy(X::DCASample)
+    return DCASample(;
+        dat = copy(X.dat)',
+        weights = copy(X.weights),
+        mapping = copy(X.mapping),
+        q = X.q,
+    )
+end
+
 
 
 function Base.show(io::IO, X::DCASample)
@@ -231,7 +240,12 @@ end
 eachsequence(X::DCASample) = eachcol(X.dat)
 eachsequence_weighted(X::DCASample) = zip(eachsequences(X), X.weights)
 
-function subsample(X::DCASample, i::Int)
+"""
+    subsample(X::DCASample, idx)
+
+Create a new `DCASample` object using sequences at indices `idx`.
+"""
+function subsample(X::DCASample, i::Integer)
     dat = reshape(X[i], length(X[i]))
     w = [1]
     return DCASample(dat; q=X.q, mapping=X.mapping, weights = w)
@@ -242,3 +256,32 @@ function subsample(X::DCASample, idx)
     w /= sum(w)
     return DCASample(dat, X.q; mapping=X.mapping, weights = w)
 end
+
+
+"""
+    onehot(sequence::AbstractVector{Int}, q::Integer)
+"""
+function onehot(sequence::AbstractVector{Int}, q::Integer)
+    L = length(sequence)
+    s = zeros(Int, L*q)
+    for (i, a) in enumerate(sequence)
+        s[(i-1)*q + a] = 1
+    end
+    return s
+end
+"""
+    onehot(X::DCASample)
+
+Return the onehot encoded `X.dat` as a matrix. Sequences are columns.
+"""
+function onehot(X::DCASample)
+    L, M = size(X)
+    Y = zeros(Int, L*X.q, M)
+    for (m, s) in enumerate(X), (i, a) in enumerate(s)
+        Y[(i-1)*X.q + a, m] = 1
+    end
+    return Y
+end
+
+
+

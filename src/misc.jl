@@ -253,7 +253,8 @@ end
 """
     hamming(X,Y)
 """
-function hamming(X,Y)
+function hamming(X::AbstractVector, Y::AbstractVector)
+    @assert length(X) == length(Y) "Cannot compute hamming distance for arrays of different size"
     S = 0
     for (x,y) in zip(X,Y)
         if x != y

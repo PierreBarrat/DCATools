@@ -58,6 +58,7 @@ function read_msa(
 	fastafile::AbstractString;
 	mapping = DEFAULT_AA_MAPPING, compute_weights = false, theta = 0.2,
 )
+    @debug "Reading alignment with mapping $mapping"
     rev_mapping = Dict(c => i for (i,c) in mapping)
     Y = let
 	    fasta = FASTA.Reader(open(fastafile, "r"))
@@ -71,8 +72,12 @@ end
 
 
 
+"""
+    Base.write(file::AbstractString, S::DCASample; map=true)
 
-function write(file::AbstractString, S::DCASample; map=true, kwargs...)
+Write `S` to `file`. If `map=false`, use a numerical format.
+"""
+function Base.write(file::AbstractString, S::DCASample; map=true, kwargs...)
 	if map
 		_write_fasta(file, S)
 	else
@@ -107,8 +112,9 @@ end
 
 """
     pw_hamming_distance(Y::DCASample; normalize=true, step=1)
+    pw_hamming_distance(Y::DCASample, X::DCASample; normalize=true, step=1)
 
-Pairwise hamming distance between sequences in `Y`. For `M` sequences, return a vector of
+Pairwise hamming distance between sequences in `Y` and `X`. For `M` sequences, return a vector of
 length `M(M-1)/2`. Only considers sequences at index `1:step:end` (useful for large
 alignments).
 """

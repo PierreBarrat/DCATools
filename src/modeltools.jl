@@ -116,7 +116,7 @@ end
 
 Compute energies of all configurations in `sample` with graph `g`.
 """
-function energy(g::DCAGraph, S)
+function energy(g::DCAGraph, S::AbstractVector)
 	L = length(S)
 	E = 0
 	for i in 1:L
@@ -127,7 +127,8 @@ function energy(g::DCAGraph, S)
     end
     return E
 end
-energy(g::DCAGraph, S::Matrix{Int}) = map(s -> energy(g,s), eachrow(S))
+energy(g::DCAGraph, S::AbstractMatrix{Int}) = map(s -> energy(g,s), eachrow(S))
+energy(g::DCAGraph, S::DCASample) = map(s -> energy(g, s), S)
 
 
 """
