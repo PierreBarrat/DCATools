@@ -1,81 +1,46 @@
 module DCATools
 
 using DelimitedFiles
-using Statistics
+using FASTX
 using LinearAlgebra
-using FastaIO
+using Printf
+using Random
+using Statistics
 
-import Base: *, getindex, setindex!, ==
+import Base: *, copy, firstindex, lastindex, getindex, iterate, length
+import Base: eltype, setindex!, size, write, show, view
 
-"""
-	DCAgraph
-"""
-mutable struct DCAgraph
-    J::Array{Float64,2}
-    h::Array{Float64,1}
-    L::Int64
-    q::Int64
-end
-function DCAgraph(L,q)
-	return DCAgraph(zeros(Float64, L*q, L*q), zeros(Float64, L*q), L, q)
-end
+include("sequence_mapping.jl")
+export default_mapping
+
+include("objects.jl")
+export DCAGraph, DCASample, eachsequence
 
 
-"""
-	*(B, g::DCAgraph)
+include("IO.jl")
+export writeparam
 
-Multiply fields and couplings in `g` by scalar `B`. Useful to change temperature.
-"""
-function *(B, g::DCAgraph)
-    return DCAgraph(B*g.J, B*g.h, g.L, g.q)
-end
+include("alignment_tools.jl")
+export read_msa_num, read_msa
 
-"""
-	*(B, g::DCAgraph)
+include("alignment_frequencies.jl")
+export pairwise_frequencies, profile_frequency, computeweights
 
-Multiply fields and couplings in `g` by scalar `B`. Useful to change temperature.
-"""
-function *(g::DCAgraph, B)
-    return DCAgraph(B*g.J, B*g.h, g.L, g.q)
-end
-
-"""
-"""
-getindex(g::DCAgraph, i, j, a, b) = g.J[(i .-1)*g.q .+ a, (j .-1)*g.q .+ b]
-getindex(g::DCAgraph, i, j, a, b::Colon) = g.J[(i .-1)*g.q .+ a, (j .-1)*g.q .+ (1:g.q)]
-getindex(g::DCAgraph, i, j, a::Colon, b) = g.J[(i .-1)*g.q .+ (1:g.q), (j .-1)*g.q .+ b]
-getindex(g::DCAgraph, i, j, a::Colon, b::Colon) = g.J[(i .-1)*g.q .+ (1:g.q), (j .-1)*g.q .+ (1:g.q)]
-
-getindex(g::DCAgraph, i, a) = g.h[(i .-1)*g.q .+ a]
-getindex(g::DCAgraph, i, a::Colon) = g.h[(i .-1)*g.q .+ (1:g.q)]
-
-setindex!(g::DCAgraph, val, i, j, a, b) = (g.J[(i .-1)*g.q .+ a, (j .-1)*g.q .+ b] = val)
-setindex!(g::DCAgraph, val, i, j, a::Colon, b) = (g.J[(i .-1)*g.q .+ (1:g.q), (j .-1)*g.q .+ b] = val)
-setindex!(g::DCAgraph, val, i, j, a, b::Colon) = (g.J[(i .-1)*g.q .+ a, (j .-1)*g.q .+ (1:g.q)] = val)
-setindex!(g::DCAgraph, val, i, j, a::Colon, b::Colon) = (g.J[(i .-1)*g.q .+ (1:g.q), (j .-1)*g.q .+ (1:g.q)] = val)
-
-
-setindex!(g::DCAgraph, val, i, a) = (g.h[(i .-1)*g.q .+ a] = val)
-setindex!(g::DCAgraph, val, i, a::Colon) = (g.h[(i .-1)*g.q .+ (1:g.q)] = val)
-
-function ==(g1::DCAgraph, g2::DCAgraph)
-    g1.J == g2.J && g1.h == g2.h && g1.L == g2.L && g1.q == g2.q
-end
-
-
-include("global.jl")
-include("inputoutput.jl")
-include("alignmenttools.jl")
 include("modeltools.jl")
+export switchgauge!, energy
+
 include("contactprediction.jl")
+export PPV, Fapc
+
 include("misc.jl")
+export fitquality, threepointscor, corr3p
+
 include("MF.jl")
 
-export DCAgraph, *
-
 # Other sub-modules
-include("MCMC.jl")
-export doMCMC
+include("sampling.jl")
+export sample
+
 
 #
 include("MutLand/MutLand.jl")

@@ -1,5 +1,3 @@
-export bmstep!, bmlearn
-
 let verbose::Bool = false
 	global v() = verbose
 	global vv() = vverbose
@@ -45,8 +43,8 @@ end
 """
 	bmlearn(
 		f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64;
-		ginit::DCAgraph = DCAgraph(L,q),
-		gradinit=DCAgrad(L, q),
+		ginit::DCAGraph = DCAGraph(L,q),
+		gradinit=DCAGrad(L, q),
 		mutants::MutData = MutData(),
 		kwargs...
 	)
@@ -58,8 +56,8 @@ Parameters guiding the learning process are provided as additional keyword argum
 """
 function bmlearn(
 	f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64;
-	ginit::DCAgraph = DCAgraph(L,q),
-	gradinit=DCAgrad(L, q),
+	ginit::DCAGraph = DCAGraph(L,q),
+	gradinit=DCAGrad(L, q),
 	mutants::MutData = MutData(),
 	kwargs...
 )
@@ -74,10 +72,10 @@ end
 
 """
 	bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64, meta::BMmeta = BMmeta();
-			ginit::DCAgraph = DCAgraph(L,q), gradinit=DCAgrad(L, q), mutants::MutData = MutData())
+			ginit::DCAGraph = DCAGraph(L,q), gradinit=DCAGrad(L, q), mutants::MutData = MutData())
 """
 function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64, meta::BMmeta;
-	ginit::DCAgraph = DCAgraph(L,q), gradinit=DCAgrad(L, q), mutants::MutData = MutData())
+	ginit::DCAGraph = DCAGraph(L,q), gradinit=DCAGrad(L, q), mutants::MutData = MutData())
 	# log / info flags
 	woutput = (meta.savefolder != "")
 
@@ -90,7 +88,7 @@ function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64,
 		writeinfo(
 			"$(meta.savefolder)/$(meta.infofile)",
 			meta,
-			ginit != DCAgraph(L,q),
+			ginit != DCAGraph(L,q),
 			!isempty(mutants.mutant)
 		)
 	end
@@ -127,9 +125,9 @@ function bmlearn(f1::Array{Float64,1}, f2::Array{Float64,2}, L::Int64, q::Int64,
 		v() && println("Norm of gradient: $(bmlog.gradnorm)")
 		woutput && writelog(logfile, bmlog)
 		if woutput && mod(it, meta.saveparam)==0 && meta.savefolder!=""
-			writeparam("$(meta.savefolder)/DCABM_it$(it)_mat.txt", g, format="mat")
+			write("$(meta.savefolder)/DCABM_it$(it)_mat.txt", g, :matrix)
 		elseif woutput && mod(it, meta.saveparam)==0
-			writeparam("DCABM_it$(it)_mat.txt", g, format="mat")
+			write("DCABM_it$(it)_mat.txt", g, :matrix)
 		end
 	end
 	return g, cgrad, bmlog
@@ -138,21 +136,21 @@ end
 
 
 """
-	bmsample(g::DCAgraph, M::Int64)
+	bmsample(g::DCAGraph, M::Int64)
 """
-function bmsample(g::DCAgraph, M::Int64, nprocs, tau::Int64)
+function bmsample(g::DCAGraph, M::Int64, nprocs, tau::Int64)
 	if tau == 0
-		tau = min(estimatetau(g)[1], g.L)
+		tau = min(DCATools.estimatetau(g)[1], g.L)
 	end
-	return doMCMC(g, M, tau, T = 10*tau, nprocs = nprocs), tau
+	return sample(g, M; Twait = tau), tau
 end
 
 """
-	bmstep!(g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, md::MutData, prevgrad::DCAgrad, meta::BMmeta, bmlog::BMlog)
+	bmstep!(g::DCAGraph, f1::Array{Float64,1}, f2::Array{Float64,2}, md::MutData, prevgrad::DCAGrad, meta::BMmeta, bmlog::BMlog)
 
 Compute gradient for current graph `g` and updates it. Target frequencies are `f1` and `f2`. Local mutational data is `md`. Return computed gradient. 
 """
-function bmstep!(g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, md::MutData, prevgrad::DCAgrad, meta::BMmeta, bmlog::BMlog)
+function bmstep!(g::DCAGraph, f1::Array{Float64,1}, f2::Array{Float64,2}, md::MutData, prevgrad::DCAGrad, meta::BMmeta, bmlog::BMlog)
 
 	# Compute new sample
 	sample, tau = bmsample(g, bmlog.samplesize, meta.nprocs, bmlog.tau)
@@ -214,14 +212,14 @@ function bmstep!(g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, md::Mu
 end
 
 """
-	bminit!(grad::DCAgrad, g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, meta::BMmeta)
+	bminit!(grad::DCAGrad, g::DCAGraph, f1::Array{Float64,1}, f2::Array{Float64,2}, meta::BMmeta)
 
 Initialize gradient and sample with null values. Step sizes for gradient are initialized using `meta`. If the gradient was a non-null one, *ie* if gradient values or stepsizes are different from 0, then the full gradient object remains untouched. 
 """
-function bminit!(grad::DCAgrad, g::DCAgraph, f1::Array{Float64,1}, f2::Array{Float64,2}, meta::BMmeta, bmlog::BMlog)
+function bminit!(grad::DCAGrad, g::DCAGraph, f1::Array{Float64,1}, f2::Array{Float64,2}, meta::BMmeta, bmlog::BMlog)
 	sampleinit = zeros(Int64, bmlog.samplesize, g.L)
 
-	if gradequal(DCAgrad(g.L, g.q), grad)
+	if gradequal(DCAGrad(g.L, g.q), grad)
 		grad.stepJ .= meta.basestepJ
 		grad.steph .= meta.basesteph
 	end
@@ -232,11 +230,11 @@ function bminit!(grad::DCAgrad, g::DCAgraph, f1::Array{Float64,1}, f2::Array{Flo
 end
 
 """
-	updateM!(bmlog::BMlog, prevgrad::DCAgrad, newgrad::DCAgrad, meta::BMmeta)
+	updateM!(bmlog::BMlog, prevgrad::DCAGrad, newgrad::DCAGrad, meta::BMmeta)
 
 Update `M` based on the norM of the gradient. If gradient norm (for `J` only) increased in the last iteration, `M` is increased.
 """
-function updateM!(bmlog::BMlog, prevgrad::DCAgrad, newgrad::DCAgrad, meta::BMmeta)
+function updateM!(bmlog::BMlog, prevgrad::DCAGrad, newgrad::DCAGrad, meta::BMmeta)
 	newgrad_norm = sum(newgrad.gradJ.^2)
 	prevgrad_norm = sum(prevgrad.gradJ.^2)
 	if newgrad_norm > prevgrad_norm && prevgrad_norm!=0.

@@ -1,5 +1,7 @@
 """
 	mf_couplings(C ; q = 21)
+
+never tested, I would be surprised if it works
 """
 function mf_couplings(C ; q = 21)
 	L = Int64(size(C)[1]/q)
