@@ -76,110 +76,104 @@ function sample(
     return DCASample(sample, graph.q; mapping = graph.mapping)
 end
 
-
+#=
+Note: `jdx` contains precomputed indices for `conf`, of the form `(j-1)*q + conf[j]`
+All the step!/sweep! functions have two forms (with mostly duplicated code): one with
+jdx and one without.
+I could not figure out how to do better
+=#
 function mcmc_sweep!(conf, jdx, g; step_type = :metropolis, rng = Random.GLOBAL_RNG)
 	q, L = size(g)
 	@assert length(conf) == L "Configuration and graph have incompatible sizes\
 		(respectively $(length(conf)) and $L"
-	for rep in 1:L
-		mcmc_step!(conf, jdx, g; step_type, rng)
-	end
+    if step_type == :metropolis
+	    for rep in 1:L
+		    metropolis_step!(conf, jdx, g; rng)
+	    end
+    elseif step_type == :gibbs
+        gibbs_sweep!(conf, jdx, g)
+    else
+        throw(ErrorException("Unrecognized step type: pick from `:metropolis` or `:gibbs`"))
+    end
 	return nothing
 end
 
-#=
-Note: `jdx` contains precomputed indices for `conf`, of the form `(j-1)*q + conf[j]`
-All the step! functions have two forms (with mostly duplicated code). I could not figure out
-how to do better
-=#
-function mcmc_step!(conf, jdx, g; step_type = :metropolis, rng = Random.GLOBAL_RNG)
-    return if step_type == :metropolis
-        metropolis_step!(conf, jdx, g; rng)
-    elseif step_type == :gibbs
-        gibbs_step!(conf, jdx, g; rng)
-    else
-        throw(ErrorException("Unrecognized MCMC step type $(step_type)"))
-    end
-end
-function mcmc_step!(conf, g; step_type = :metropolis, rng = Random.GLOBAL_RNG)
-    return if step_type == :metropolis
-        metropolis_step!(conf, g; rng)
-    elseif step_type == :gibbs
-        gibbs_step!(conf, g; rng)
-    else
-        throw(ErrorException("Unrecognized MCMC step type $(step_type)"))
-    end
-end
-
-function gibbs_step!(conf, jdx, g::DCAGraph; rng = Random.GLOBAL_RNG)
+function gibbs_sweep!(conf, jdx, g::DCAGraph; rng = Random.GLOBAL_RNG)
     q, L = size(g)
+    moved = false
 
-    # Flip position
-    i = rand(rng, 1:L)
-    a = conf[i] # initial state
+    for i in 1:L
+        a = conf[i] # initial state
 
-    # constructing local landscape
-    P = map(1:q) do b
-        id_i_b = (i-1)*q+b # precomputed index for (i,b)
-        # ΔE
-        E = g.h[jdx[i]] - g.h[id_i_b]
-        for j = 1:L
-            if j != i
-                E += g.J[jdx[i], jdx[j]] - g.J[id_i_b, jdx[j]]
+        # constructing local landscape
+        P = map(1:q) do b
+            id_i_b = (i-1)*q+b # precomputed index for (i,b)
+            # ΔE
+            E = g.h[jdx[i]] - g.h[id_i_b]
+            for j = 1:L
+                if j != i
+                    E += g.J[jdx[i], jdx[j]] - g.J[id_i_b, jdx[j]]
+                end
             end
+            exp(-E)
         end
-        exp(-E)
+        P /= sum(P)
+
+        # picking from P
+        x = rand()
+        b = 1
+        Z = P[b]
+        while x > Z
+            # @info b x P
+            b += 1
+            Z += P[b]
+        end
+
+        conf[i] = b
+        jdx[i] = (i-1)*q + b
+        if a != b
+            moved = true
+        end
     end
-    P /= sum(P)
 
-    # picking from P
-    x = rand()
-    b = 1
-    Z = P[b]
-    while x > Z
-        # @info b x P
-        b += 1
-        Z += P[b]
-    end
-
-    conf[i] = b
-    jdx[i] = (i-1)*q + b
-
-    return true
+    return moved
 end
-function gibbs_step!(conf, g::DCAGraph; rng = Random.GLOBAL_RNG)
+function gibbs_sweep!(conf, g::DCAGraph; rng = Random.GLOBAL_RNG)
     q, L = size(g)
+    moved = false
 
-    # Flip position
-    i = rand(rng, 1:L)
-    a = conf[i] # initial state
+    for i in 1:L
+        a = conf[i] # initial state
 
-    # constructing local landscape
-    P = map(1:q) do b
-        id_i_b = (i-1)*q+b # precomputed index for (i,b)
-        # ΔE
-        E = g.h[(i-1)*g.q + conf[i]] - g.h[id_i_b]
-        for j = 1:L
-            if j != i
-                E += g.J[(i-1)*g.q + conf[i], (j-1)*g.q + conf[j]] - g.J[id_i_b, (j-1)*g.q + conf[j]]
+        # constructing local landscape
+        P = map(1:q) do b
+            id_i_b = (i-1)*q+b # precomputed index for (i,b)
+            # ΔE
+            E = g.h[(i-1)*g.q + conf[i]] - g.h[id_i_b]
+            for j = 1:L
+                if j != i
+                    E += g.J[(i-1)*g.q + conf[i], (j-1)*g.q + conf[j]] - g.J[id_i_b, (j-1)*g.q + conf[j]]
+                end
             end
+            exp(-E)
         end
-        exp(-E)
-    end
-    P /= sum(P)
+        P /= sum(P)
 
-    # picking from P
-    x = rand()
-    b = 1
-    Z = P[b]
-    while x > Z
-        # @info b x P
-        b += 1
-        Z += P[b]
+        # picking from P
+        x = rand()
+        b = 1
+        Z = P[b]
+        while x > Z
+            b += 1
+            Z += P[b]
+        end
+        conf[i] = b
+        if b != a
+            moved = true
+        end
     end
-    conf[i] = b
 
-    return true
+    return moved
 end
 
 
@@ -286,17 +280,18 @@ function estimatetau(g::DCAGraph ; itau = 1, M = 300, tol=0.05, nchains=5)
 			return tau * itau, h_intra, h_inter
 		end
 	end
+    @warn "Could only find lower bound for decorrelation time"
 	return length(h_intra[1]) * itau, h_intra, h_inter
 end
 
 
 function hamming_v_time(sample)
-	(M,L) = size(sample)
+	(L, M) = size(sample)
 	navmin = 25
 	h = zeros(Float64, M-navmin)
 	for t in 1:(M-navmin)
 		for m in 1:(M-t)
-			h[t] += DCATools.hamming(sample[m,:], sample[m+t,:]) 
+			h[t] += DCATools.hamming(sample[m], sample[m+t])
 		end
 		h[t] /= (M-t)
 	end
@@ -304,14 +299,14 @@ function hamming_v_time(sample)
 end
 
 function hamming_v_time(S1, S2)
-	(M,L) = size(S1)
+	(L, M) = size(S1)
 	if size(S2) != size(S1)
 		@error "Samples of different sizes"
 	end
 	navmin = M-25
 	h = Array{Float64,1}(undef, M)
 	for m in 1:M
-		h[m] = DCATools.hamming(S1[m,:], S2[m,:])
+		h[m] = DCATools.hamming(S1[m], S2[m])
 	end
 	return h
 end
