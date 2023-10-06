@@ -119,7 +119,7 @@ end
 
 function pairwise_frequencies(Y::DCASample; computew=false, kwargs...)
 	if computew
-		f1, f2, w = pairwise_frequencies(Y.dat; q=Y.q, computew, kwargs...)
+		f1, f2, w = pairwise_frequencies(Y.dat; q=Y.q, computew=true, kwargs...)
 	else
 		f1, f2, w = pairwise_frequencies(Y.dat; q=Y.q, weights=Y.weights, computew, kwargs...)
 	end

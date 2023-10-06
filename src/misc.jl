@@ -8,7 +8,14 @@ Fitting quality of pairwise frequencies. Compare frequencies `(f1_1,f2_1)` (*e.g
 4. Same as 1. for magnetizations.
 5. Same as 3. for magnetizations.
 """
-function fitquality(f2_1::Array{Float64,2}, f1_1::Array{Float64,1}, f2_2::Array{Float64,2}, f1_2::Array{Float64,1}, q::Int64; withdiag=false)
+function fitquality(
+    f2_1::Matrix{Float64},
+    f1_1::Vector{Float64},
+    f2_2::Matrix{Float64},
+    f1_2::Vector{Float64},
+    q;
+    withdiag=false
+)
     L = Int64(size(f2_1,1)/q)
     C1 = f2_1 - f1_1*f1_1'
     C2 = f2_2 - f1_2*f1_2'
@@ -27,12 +34,19 @@ function fitquality(f2_1::Array{Float64,2}, f1_1::Array{Float64,1}, f2_2::Array{
         end
     end
 
-    cc = Statistics.cor(c1vec,c2vec)
-    cslope = linreg(c1vec,c2vec)[2]
-    froc = LinearAlgebra.norm(c1vec - c2vec)
-    cm = Statistics.cor(f1_1,f1_2)
-    from = LinearAlgebra.norm(f1_1-f1_2)
-    return (cc,cslope,froc,cm,from)
+    return (
+        cor_cor = Statistics.cor(c1vec, c2vec),
+        slope_cor = linreg(c1vec,c2vec)[2],
+        norm_diff_cor = LinearAlgebra.norm(c1vec - c2vec),
+        cor_mag = Statistics.cor(f1_1,f1_2),
+        norm_diff_mag = LinearAlgebra.norm(f1_1-f1_2)
+    )
+end
+
+function fitquality(X::DCASample, Y::DCASample)
+    x1, x2, _ = pairwise_frequencies(X)
+    y1, y2, _ = pairwise_frequencies(Y)
+    return fitquality(x2, x1, y2, y1, X.q)
 end
 
 """
@@ -251,7 +265,9 @@ function aa2bin(x::Array{Int64,2} ;q=21)
 end
 
 """
-    hamming(X,Y)
+    hamming(X::AbstractVector, Y::AbstractVector)
+
+Return the un-normalized hamming distance between X and Y
 """
 function hamming(X::AbstractVector, Y::AbstractVector)
     @assert length(X) == length(Y) "Cannot compute hamming distance for arrays of different size"

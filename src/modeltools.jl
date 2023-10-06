@@ -118,6 +118,7 @@ Compute energies of all configurations in `sample` with graph `g`.
 """
 function energy(g::DCAGraph, S::AbstractVector)
 	L = length(S)
+    L != g.L && throw(ErrorException("Incorrect sequence length $L. Model length $(g.L)"))
 	E = 0
 	for i in 1:L
         for j in (i+1):L

@@ -10,6 +10,7 @@ L::Int
 q::Int
 J::Array{Float64,2}
 h::Array{Float64,1}
+mapping::Dict # mapping from integers to amino acids
 ```
 """
 Base.@kwdef mutable struct DCAGraph
@@ -89,22 +90,24 @@ end
 Base.size(g::DCAGraph) = (g.q, g.L)
 
 """
-	*(B, g::DCAGraph)
+	*(β, g::DCAGraph)
 
-Multiply fields and couplings in `g` by scalar `B`. Useful to change temperature.
+Multiply fields and couplings in `g` by scalar `β`. Useful to change temperature.
 """
-function Base.:*(B, g::DCAGraph)
-    return DCAGraph(B*g.J, B*g.h, g.L, g.q)
+function Base.:*(β, g::DCAGraph)
+    return DCAGraph(; J = β*g.J, h = β*g.h, L = g.L, q = g.q, mapping = g.mapping)
 end
 
 """
-	*(B, g::DCAGraph)
+	*(β, g::DCAGraph)
 
 Multiply fields and couplings in `g` by scalar `B`. Useful to change temperature.
 """
-function Base.:*(g::DCAGraph, B)
-    return DCAGraph(B*g.J, B*g.h, g.L, g.q)
+function Base.:*(g::DCAGraph, β)
+    return DCAGraph(; J = β*g.J, h = β*g.h, L = g.L, q = g.q, mapping = g.mapping)
 end
+
+
 
 """
 """
