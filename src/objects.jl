@@ -240,6 +240,11 @@ function Base.show(io::IO, x::MIME"text/plain", X::DCASample)
 	show(io, x, X.dat')
 end
 
+function Random.rand(rng::AbstractRNG, X::Random.SamplerTrivial{DCASample})
+    L = size(X[], 1)
+    return X[][rand(rng, 1:L)]
+end
+
 eachsequence(X::DCASample) = eachcol(X.dat)
 eachsequence_weighted(X::DCASample) = zip(eachsequences(X), X.weights)
 
