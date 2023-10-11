@@ -9,6 +9,7 @@ using Statistics
 
 import Base: *, copy, firstindex, lastindex, getindex, iterate, length
 import Base: eltype, setindex!, size, write, show, view
+import Random: rand
 
 include("sequence_mapping.jl")
 export default_mapping
