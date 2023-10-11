@@ -132,6 +132,42 @@ Base.setindex!(g::DCAGraph, val, i, a::Colon) = (g.h[(i .-1)*g.q .+ (1:g.q)] .= 
 Base.setindex!(g::DCAGraph, val, i::Colon, a) = (g.h[(0:g.L-1)*g.q .+ a] .= val)
 Base.setindex!(g::DCAGraph, val, i::Colon, a::Colon) = (g.h[:] .= val)
 
+###################################################################################
+##################################### ProfileModel #####################################
+###################################################################################
+
+@kwdef mutable struct ProfileModel
+    L::Int
+    q::Int
+    w::Vector{Float64} # probabilites, size Lxq
+    mapping::Dict = default_mapping(q)
+end
+
+Base.size(g::ProfileModel) = (g.q, g.L)
+
+Base.getindex(g::ProfileModel, i, a) = g.w[(i .-1)*g.q .+ a]
+Base.getindex(g::ProfileModel, i, a::Colon) = g.w[(i .-1).*g.q .+ (1:g.q)]
+Base.getindex(g::ProfileModel, i::Colon, a) = g.w[(0:g.L-1)*g.q .+ a]
+Base.getindex(g::ProfileModel, i::Colon, a::Colon) = g.w[:]
+
+Base.setindex!(g::ProfileModel, val, i, a) = (g.w[(i .-1)*g.q .+ a] = val)
+Base.setindex!(g::ProfileModel, val, i, a::Colon) = (g.w[(i .-1)*g.q .+ (1:g.q)] .= val)
+Base.setindex!(g::ProfileModel, val, i::Colon, a) = (g.w[(0:g.L-1)*g.q .+ a] .= val)
+Base.setindex!(g::ProfileModel, val, i::Colon, a::Colon) = (g.w[:] .= val)
+
+function DCAGraph(p::ProfileModel; pc = 1e-5)
+    q, L = size(p)
+    h = log.((1-pc)*p.w .+ pc/q)
+    for i in 1:L
+        h[(i-1)*q .+ (1:q)] .-= mean(h[(i-1)*q .+ (1:q)])
+    end
+
+    return DCAGraph(; L, q, h, mapping = p.mapping)
+end
+
+###################################################################################
+#################################### DCASample ####################################
+###################################################################################
 
 """
 	mutable struct DCASample

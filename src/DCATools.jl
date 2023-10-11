@@ -15,6 +15,7 @@ export default_mapping
 
 include("objects.jl")
 export DCAGraph, DCASample, eachsequence
+export DCAGraph, DCASample, eachsequence, ProfileModel
 
 
 include("IO.jl")
