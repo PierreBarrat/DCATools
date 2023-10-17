@@ -140,8 +140,8 @@ couplings instead.
 """
 function profile_model(X::DCASample; pc = 1e-5, as_graph = false)
     f1, _ = pairwise_frequencies(X)
-    model = profile_model(f1, X.q)
-    return as_graph ? DCAGraph(model; pc) : model
+    model = profile_model((1-pc)*f1 .+ pc/X.q, X.q)
+    return as_graph ? DCAGraph(model) : model
 end
 
 """
