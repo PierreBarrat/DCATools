@@ -133,33 +133,28 @@ energy(g::DCAGraph, S::DCASample) = map(s -> energy(g, s), S)
 
 
 """
-    profile_model(X::DCASample; pc = 1e-5)
+    profile_model(X::DCASample; pc = 1e-5, as_graph = false)
 
-Infer profile model from alignment `X`.
+Infer a  `ProfileModel` from alignment `X`. If `as_graph`, return a `DCAGraph` with zero
+couplings instead.
 """
-function profile_model(X::DCASample; pc = 1e-5)
+function profile_model(X::DCASample; pc = 1e-5, as_graph = false)
     f1, _ = pairwise_frequencies(X)
-    return profile_model(f1, X.q, pc=pc)
+    model = profile_model((1-pc)*f1 .+ pc/X.q, X.q)
+    return as_graph ? DCAGraph(model) : model
 end
 
 """
     profile_model(f1::Array{Float64,1}; pc = 1e-5)
 
-Infer profile model from frequencies `f1`.
+Infer a `ProfileModel` from frequencies `f1`.
 
 Keywords:
 - `pc`: Pseudocount ratio. Defaults to `1e-5`.
 """
-function profile_model(f1::Array{Float64,1}, q; pc = 1e-5)
-    L = Int(size(f1,1)/q)
-
-    h = log.((1-pc)*f1 .+ pc/q)
-    for i in 1:L
-        h[(i-1)*q .+ (1:q)] .-= mean(h[(i-1)*q .+ (1:q)])
-    end
-    g = DCAGraph(; L, q, J=zeros(L*q,L*q), h)
-
-    return g
+function profile_model(w::Array{Float64,1}, q)
+    L = Int(size(w,1)/q)
+    return ProfileModel(; L, q, w)
 end
 
 
