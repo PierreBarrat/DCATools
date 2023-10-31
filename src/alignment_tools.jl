@@ -60,14 +60,16 @@ function read_msa(
 )
     @debug "Reading alignment with mapping $mapping"
     rev_mapping = Dict(c => i for (i,c) in mapping)
-    Y = let
-	    fasta = FASTA.Reader(open(fastafile, "r"))
+    Y = FASTA.Reader(open(fastafile, "r")) do fasta
         vcat(map(x -> aa_to_num(sequence(x), rev_mapping)', fasta)...)
+    end
+    names = FASTA.Reader(open(fastafile, "r")) do fasta
+        map(description, fasta)
     end
 	q = length(mapping)
 	weights = compute_weights ? computeweights(Y, theta) : ones(size(Y, 1))/size(Y,1)
 
-	return DCASample(Y, q, mapping, weights)
+	return DCASample(Y, q, mapping, weights, names)
 end
 
 

@@ -168,13 +168,14 @@ that the input matrix has sequences as rows.
 - `subsample(X::DCASample, i)` constructs the subsample defined by index `i`.
 
 """
-Base.@kwdef mutable struct DCASample
+@kwdef mutable struct DCASample
 	dat::Matrix{Int}
 	q::Int = 21
 	mapping::Dict{Int, Char} = default_mapping(q)
 	weights::Vector{Float64} = ones(size(dat,1))/size(dat,1)
+    names::Vector{String} = fill("", size(dat, 1))
 
-	function DCASample(dat, q, mapping, weights)
+	function DCASample(dat, q, mapping, weights, names)
         # dat
         @assert all(>(0), dat) "data must be a matrix/vector of strictly positive integers - got a zero or negative value"
         @assert maximum(dat) <= q "values in `dat` must be smaller than `q`=$q - got $(maximum(dat))"
@@ -185,12 +186,17 @@ Base.@kwdef mutable struct DCASample
 		@assert length(weights) == size(dat, 1) "inconsistent number of weights: $(size(dat,1)) sequence and $(length(weights)) weights"
 		@assert all(>(0), weights) "Weights cannot be negative"
 		@assert isapprox(sum(weights), 1) "Weights must sum to 1"
+        @assert length(names) == size(dat, 1) "Must have as many names as sequences"
 
-		new(Matrix(dat'), q, mapping, weights)
+		new(Matrix(dat'), q, mapping, weights, names)
 	end
 end
+DCASample(Y::Matrix, q::Number, mapping, w) = DCASample(; dat = Y, q, mapping, weights = w)
 
-DCASample(Y, q, mapping::AbstractString, w) = DCASample(Y, q, compute_mapping(mapping), w)
+function DCASample(Y, q, mapping::AbstractString, w, names)
+    DCASample(Y, q, compute_mapping(mapping), w, names)
+end
+
 
 
 """
@@ -217,6 +223,14 @@ Base.getindex(X::DCASample, i) = X.dat[:, i]
 Base.firstindex(::DCASample) = 1
 Base.lastindex(X::DCASample) = length(X)
 Base.view(X::DCASample, i) = view(X.dat, :, i)
+
+function Base.getindex(X::DCASample, name::AbstractString)
+    i = findfirst(==(name), X.names)
+    if isnothing(i)
+        throw(KeyError("Name $name not found in sample"))
+    end
+    return X[i]
+end
 
 function Base.copy(X::DCASample)
     return DCASample(;
