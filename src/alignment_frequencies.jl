@@ -14,6 +14,15 @@ function profile_frequency(X::DCASample)
 
 	return f1
 end
+function consensus(X::DCASample)
+    f = profile_frequency(X)
+    L = size(X, 1)
+    x = map(1:L) do i
+        argmax(f[(i-1)*X.q .+ (1:X.q)])
+    end
+    return DCASample(x; mapping=X.mapping, names = ["consensus"])
+end
+
 """
     pairwise_frequencies(Y::Matrix{<:Integer}, w::Array{Float64,1}, q::Integer)
 
