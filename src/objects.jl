@@ -177,6 +177,7 @@ end
     q::Int = 21
     mapping::Dict{Int, Char} = default_mapping(q)
     weights::Vector{Float64} = ones(size(dat,1))/size(dat,1) # phylogenetic weights of sequences
+    names::Vector{String} = fill("", size(dat, 1))
 ```
 
 Stores sequences or a sample of a DCA model. `dat` stores sequences/samples in *columns*:

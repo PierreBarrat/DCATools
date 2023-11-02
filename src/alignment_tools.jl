@@ -90,7 +90,8 @@ function _write_fasta(file::AbstractString, S::DCASample)
     try
 	    FASTAWriter(open(file, "w")) do io
 	    	for (i,s) in enumerate(S)
-	    		rec = FASTARecord("$i", DCATools.num_to_aa(s; mapping = S.mapping))
+                header = isempty(S.names[i]) ? "$i" : S.names[i]
+	    		rec = FASTARecord(header, DCATools.num_to_aa(s; mapping = S.mapping))
 	    		write(io, rec)
 	    	end
 	    end
@@ -161,3 +162,5 @@ function pw_hamming_distance(X::DCASample, Y::DCASample; normalize=true, step=1)
 
     return normalize ? out / L1 : out
 end
+
+
