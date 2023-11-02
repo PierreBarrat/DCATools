@@ -140,7 +140,7 @@ couplings instead.
 """
 function profile_model(X::DCASample; pc = 1e-5, as_graph = false)
     f1, _ = pairwise_frequencies(X)
-    model = profile_model((1-pc)*f1 .+ pc/X.q, X.q)
+    model = profile_model((1-pc)*f1 .+ pc/X.q, X.q, X.mapping)
     return as_graph ? DCAGraph(model) : model
 end
 
@@ -152,9 +152,9 @@ Infer a `ProfileModel` from frequencies `f1`.
 Keywords:
 - `pc`: Pseudocount ratio. Defaults to `1e-5`.
 """
-function profile_model(w::Array{Float64,1}, q)
+function profile_model(w::Array{Float64,1}, q, mapping)
     L = Int(size(w,1)/q)
-    return ProfileModel(; L, q, w)
+    return ProfileModel(; L, q, w, mapping)
 end
 
 
