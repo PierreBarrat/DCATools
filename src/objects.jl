@@ -307,13 +307,13 @@ Create a new `DCASample` object using sequences at indices `idx`.
 function subsample(X::DCASample, i::Integer)
     dat = reshape(X[i], length(X[i]))
     w = [1]
-    return DCASample(dat; q=X.q, mapping=X.mapping, weights = w)
+    return DCASample(dat; q=X.q, mapping=X.mapping, weights = w, names=[X.names[i]])
 end
 function subsample(X::DCASample, idx)
     dat = X[idx]'
     w = X.weights[idx]
     w /= sum(w)
-    return DCASample(dat, X.q; mapping=X.mapping, weights = w)
+    return DCASample(dat, X.q; mapping=X.mapping, weights = w, names=X.names[idx])
 end
 
 
