@@ -265,11 +265,11 @@ function aa2bin(x::Array{Int64,2} ;q=21)
 end
 
 """
-    hamming(X::AbstractVector, Y::AbstractVector)
+    hamming(X::AbstractVector, Y::AbstractVector; normalize=false)
 
 Return the un-normalized hamming distance between X and Y
 """
-function hamming(X::AbstractVector, Y::AbstractVector)
+function hamming(X::AbstractVector, Y::AbstractVector; normalize=false)
     @assert length(X) == length(Y) "Cannot compute hamming distance for arrays of different size"
     S = 0
     for (x,y) in zip(X,Y)
@@ -277,7 +277,7 @@ function hamming(X::AbstractVector, Y::AbstractVector)
         	S += 1
         end
     end
-    return S
+    return normalize ? S/length(X) : S
 end
 
 function moving_average(X, n::Int64)
