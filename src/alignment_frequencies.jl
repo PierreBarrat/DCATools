@@ -20,7 +20,7 @@ function consensus(X::DCASample)
     x = map(1:L) do i
         argmax(f[(i-1)*X.q .+ (1:X.q)])
     end
-    return DCASample(x; mapping=X.mapping, names = ["consensus"])
+    return DCASample(x; q = X.q, mapping=X.mapping, names = ["consensus"])
 end
 
 """
@@ -202,20 +202,20 @@ Compute weights for file input `msa` using threshold `theta`.
 """
 function computeweights(
 	msa::AbstractString;
-	theta = 0.2, saveweights = "", msa_format=:numerical, header=false
+	theta = 0.2, saveweights = "", msa_format=:numerical, header=false,
 )
     Y = read_msa_num(msa, msa_format, header)
     w = computeweights(Y, theta, saveweights)
     return w
 end
 
-function computeweights!(Y::DCASample; theta=0.2)
-	Y.weights = computeweights(Y.dat, theta)
+function computeweights!(Y::DCASample; theta=0.2, kwargs...)
+	Y.weights = computeweights(Y.dat, theta; kwargs...)
 	return Y.weights
 end
 
 """
-    computeweights(Y; theta = 0.2, saveweights="")
+    computeweights(Y; theta = 0.2, saveweights="", normalize=true)
 
 Compute phylogenetic weights for input `Y`.
 
@@ -223,8 +223,8 @@ Compute phylogenetic weights for input `Y`.
 - `theta`: threshold of similarity under which sequences are weighted down. Default `0.2`.
 - `saveweights`: weights are saved there if non empty. Default `""`
 """
-function computeweights(Y::AbstractMatrix{<:Integer}; theta = 0.2, saveweights="")
-    w = computeweights(Y, theta)
+function computeweights(Y::AbstractMatrix{<:Integer}; theta=0.2, saveweights="", kwargs...)
+    w = computeweights(Y, theta; kwargs...)
     if saveweights!=""
         writedlm(saveweights,w," ")
     end
@@ -237,14 +237,16 @@ computeweights(Y::DCASample; kwargs...) = computeweights(Y.dat; kwargs...)
 
 Basic routine. Compute weights of sequences in alignment `Y`, using threshold `theta`.
 """
-function computeweights(Y::AbstractMatrix{<:Integer}, theta::Float64)
+function computeweights(
+    Y::AbstractMatrix{<:Integer}, theta::Float64; normalize=true,
+)
     L, M = size(Y)
     h = L * (1-theta)
     weights = ones(Float64, M);
     d = 0
     for m = 1:M
         for l = (m+1):M
-            d = 0
+            d = 0 # similarity
             for i = 1:L
             	if Y[i,m]==Y[i,l]
                 	d += 1
@@ -257,5 +259,6 @@ function computeweights(Y::AbstractMatrix{<:Integer}, theta::Float64)
         end
     end
     weights = 1 ./ weights
-    return weights / sum(weights)
+    Meff = sum(weights)
+    return normalize ? weights / Meff : weights
 end

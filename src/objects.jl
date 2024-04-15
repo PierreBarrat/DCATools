@@ -18,7 +18,7 @@ Base.@kwdef mutable struct DCAGraph
     q::Int
     J::Array{Float64,2} = zeros(Float64, L*q, L*q)
     h::Array{Float64,1} = zeros(Float64, L*q)
-    mapping::Dict = default_mapping(q)
+    mapping::Dict{Int, Char} = default_mapping(q)
 end
 
 function DCAGraph(
@@ -255,6 +255,7 @@ Base.eltype(::Type{DCASample}) = AbstractVector{Int}
 Base.size(X::DCASample) = size(X.dat)
 Base.size(X::DCASample, i::Int) = size(X.dat, i)
 Base.length(X::DCASample) = size(X, 2)
+Base.eachindex(X::DCASample) = 1:length(X)
 
 Base.getindex(X::DCASample, i) = X.dat[:, i]
 Base.firstindex(::DCASample) = 1
@@ -299,23 +300,6 @@ end
 eachsequence(X::DCASample) = eachcol(X.dat)
 eachsequence_weighted(X::DCASample) = zip(eachsequences(X), X.weights)
 
-"""
-    subsample(X::DCASample, idx)
-
-Create a new `DCASample` object using sequences at indices `idx`.
-"""
-function subsample(X::DCASample, i::Integer)
-    dat = reshape(X[i], length(X[i]))
-    w = [1]
-    return DCASample(dat; q=X.q, mapping=X.mapping, weights = w, names=[X.names[i]])
-end
-function subsample(X::DCASample, idx)
-    dat = X[idx]'
-    w = X.weights[idx]
-    w /= sum(w)
-    return DCASample(dat, X.q; mapping=X.mapping, weights = w, names=X.names[idx])
-end
-
 
 """
     onehot(sequence::AbstractVector{Int}, q::Integer)
@@ -342,5 +326,9 @@ function onehot(X::DCASample)
     return Y
 end
 
+function Base.unique(X::DCASample)
+    unique_idx = unique(i -> X[i], eachindex(X))
+    return subsample(X, unique_idx)
+end
 
 

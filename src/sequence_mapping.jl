@@ -1,12 +1,12 @@
 """
     compute_mapping(s::AbstractString)
 
-`Dict(i => c for (i,c) in enumerate(s))`.
+Return a `Dict{Int, Char}`: `Dict(i => c for (i,c) in enumerate(s))`.
 """
 compute_mapping(s::AbstractString) = Dict(i => c for (i,c) in enumerate(s))
 
 const _DEFAULT_MAPPING = "-ACDEFGHIKLMNPQRSTVWY"
-
+const _MAPPING_Q2 = "01"
 """
 	const DEFAULT_AA_MAPPING::Dict
 
@@ -26,9 +26,12 @@ function default_mapping(q::Int)
 
 	return if q == 21
 		DEFAULT_AA_MAPPING
+    elseif q == 2
+        compute_mapping(_MAPPING_Q2)
 	elseif q < 21
 		compute_mapping(_DEFAULT_MAPPING[1:q])
 	else
+        @warn "No clear defined mapping for q = $q > 21"
 		Dict(i => 'A' for i in 1:q)
 	end
 end
@@ -47,4 +50,6 @@ function num_to_aa(s::AbstractVector{<:Integer}, mapping::AbstractDict = DEFAULT
     return string(map(x -> mapping[x], s)...)
 end
 num_to_aa(s; mapping = DEFAULT_AA_MAPPING) = num_to_aa(s, mapping)
-
+# function num_to_aa(S::DCASample)
+#     return map(s -> num_to_aa(s; S.mapping), S)
+# end

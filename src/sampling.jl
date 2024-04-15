@@ -98,6 +98,8 @@ function mcmc_sweep!(conf, jdx, g; step_type = :metropolis, rng = Random.GLOBAL_
 	return nothing
 end
 
+
+
 function gibbs_sweep!(conf, jdx, g::DCAGraph; rng = Random.GLOBAL_RNG)
     q, L = size(g)
     moved = false
@@ -138,11 +140,12 @@ function gibbs_sweep!(conf, jdx, g::DCAGraph; rng = Random.GLOBAL_RNG)
 
     return moved
 end
-function gibbs_sweep!(conf, g::DCAGraph; rng = Random.GLOBAL_RNG)
+function gibbs_sweep!(conf, g::DCAGraph; rng = Random.GLOBAL_RNG, shuffle=true)
     q, L = size(g)
     moved = false
 
-    for i in 1:L
+    order = shuffle ? randperm(L) : 1:L
+    for i in order
         a = conf[i] # initial state
 
         # constructing local landscape
@@ -176,7 +179,6 @@ function gibbs_sweep!(conf, g::DCAGraph; rng = Random.GLOBAL_RNG)
     return moved
 end
 
-
 function metropolis_step!(conf, jdx, g::DCAGraph; rng = Random.GLOBAL_RNG)
 	E = 0.
 	q, L = size(g)
@@ -201,6 +203,35 @@ function metropolis_step!(conf, jdx, g::DCAGraph; rng = Random.GLOBAL_RNG)
 	else
         false
     end
+end
+function gibbs_step!(conf, g::DCAGraph; rng = Random.GLOBAL_RNG)
+    q, L = size(g)
+    i = rand(1:L)
+    a = conf[i] # initial state
+
+    # constructing local landscape
+    P = map(1:q) do b
+        id_i_b = (i-1)*q+b # precomputed index for (i,b)
+        # ΔE
+        E = g.h[(i-1)*g.q + conf[i]] - g.h[id_i_b]
+        for j = 1:L
+            if j != i
+                E += g.J[(i-1)*g.q + conf[i], (j-1)*g.q + conf[j]] - g.J[id_i_b, (j-1)*g.q + conf[j]]
+            end
+        end
+        exp(-E)
+    end
+    P /= sum(P)
+
+    # picking from P
+    x = rand()
+    b = 1
+    Z = P[b]
+    while x > Z
+        b += 1
+        Z += P[b]
+    end
+    conf[i] = b
 end
 """
 	metropolis_step!(conf, g::DCAGraph)

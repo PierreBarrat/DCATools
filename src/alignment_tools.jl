@@ -98,6 +98,7 @@ function _write_fasta(file::AbstractString, S::DCASample)
     catch err
         @warn "There was a problem when writing sequences to files;
         this could be due to an inadapted mapping, got $(S.mapping)."
+        error(err)
     end
 end
 function _write_num(file::AbstractString, S::DCASample; header=false)
@@ -121,7 +122,7 @@ Pairwise hamming distance between sequences in `Y` and `X`. For `M` sequences, r
 length `M(M-1)/2`. Only considers sequences at index `1:step:end` (useful for large
 alignments).
 """
-function pw_hamming_distance(Y::DCASample; normalize=true, step=1)
+function pw_hamming_distance(Y::DCASample; normalize=true, step=1, kwargs...)
     L, M = size(Y)
     out = if step == 1
         Vector{Float64}(undef, Int(M*(M-1)/2))
@@ -131,14 +132,14 @@ function pw_hamming_distance(Y::DCASample; normalize=true, step=1)
     end
     i = 1
     for m1 in 1:step:M, m2 in (m1+1):step:M
-        out[i] = hamming(view(Y, m1), view(Y, m2))
+        out[i] = hamming(view(Y, m1), view(Y, m2); kwargs...)
         i += 1
     end
 
     return normalize ? out / L : out
 end
 
-function pw_hamming_distance(X::DCASample, Y::DCASample; normalize=true, step=1)
+function pw_hamming_distance(X::DCASample, Y::DCASample; normalize=true, step=1, kwargs...)
     L1, M1 = size(X)
     L2, M2 = size(Y)
 
@@ -156,11 +157,26 @@ function pw_hamming_distance(X::DCASample, Y::DCASample; normalize=true, step=1)
     end
     i = 1
     for m1 in 1:step:M1, m2 in 1:step:M2
-        out[i] = hamming(view(X, m1), view(Y, m2))
+        out[i] = hamming(view(X, m1), view(Y, m2); kwargs...)
         i += 1
     end
 
     return normalize ? out / L1 : out
 end
 
+"""
+    subsample(X::DCASample, idx)
 
+Create a new `DCASample` object using sequences at indices `idx`.
+"""
+function subsample(X::DCASample, i::Integer)
+    dat = reshape(X[i], length(X[i]))
+    w = [1]
+    return DCASample(dat; q=X.q, mapping=X.mapping, weights = w, names=[X.names[i]])
+end
+function subsample(X::DCASample, idx)
+    dat = X[idx]'
+    w = X.weights[idx]
+    w /= sum(w)
+    return DCASample(dat, X.q; mapping=X.mapping, weights = w, names=X.names[idx])
+end

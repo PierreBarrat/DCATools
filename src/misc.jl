@@ -265,19 +265,41 @@ function aa2bin(x::Array{Int64,2} ;q=21)
 end
 
 """
-    hamming(X::AbstractVector, Y::AbstractVector; normalize=false)
+    hamming(X::AbstractVector, Y::AbstractVector; normalize=false, positions = Int[])
 
-Return the un-normalized hamming distance between X and Y
+Return the un-normalized hamming distance between X and Y.
+If `positions` is empty, use all positions of the sequence.
+Otherwise, use only indices in `positions`.
 """
-function hamming(X::AbstractVector, Y::AbstractVector; normalize=false)
+function hamming(
+    X::AbstractVector, Y::AbstractVector;
+    normalize=false, positions=Int[], exclude_gaps=false, gap_state=Union{Nothing, Int}
+)
     @assert length(X) == length(Y) "Cannot compute hamming distance for arrays of different size"
+    L = length(X)
+    positions = isempty(positions) ? (1:L) : positions
     S = 0
-    for (x,y) in zip(X,Y)
-        if x != y
-        	S += 1
+
+    if !exclude_gaps
+        for i in positions
+            if X[i] != Y[i]
+            	S += 1
+            end
+        end
+        return normalize ? S/length(X) : S
+    end
+
+    isnothing(gap_state) && error("Provide an integer `gap_state` as kwarg")
+    Z = 0 # for normalization
+    for i in positions
+        x = X[i]
+        y = Y[i]
+        if x != gap_state && y != gap_state
+            x != y && (S += 1)
+            Z += 1
         end
     end
-    return normalize ? S/length(X) : S
+    return normalize ? S/Z : S
 end
 
 function moving_average(X, n::Int64)

@@ -7,8 +7,8 @@ using Printf
 using Random
 using Statistics
 
-import Base: *, copy, firstindex, lastindex, getindex, iterate, length
-import Base: eltype, setindex!, size, write, show, view
+import Base: *, copy, firstindex, lastindex, getindex, iterate, length, eachindex
+import Base: eltype, setindex!, size, write, show, unique, view
 import Random: rand
 
 include("sequence_mapping.jl")

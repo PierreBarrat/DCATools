@@ -181,6 +181,13 @@ function write_graph_extended(file::AbstractString, g::DCAGraph, sigdigits, inde
 	close(f)
 end
 
+function write(file::AbstractString, model::ProfileModel; sigdigits=5, delim='\t')
+    L, q = model.L, model.q
+    header = reshape([model.mapping[a] for a in 1:q], 1, q)
+    P = round.(reshape(model.w, q, L); sigdigits)'
+    writedlm(file, [header; P], delim)
+end
+
 
 
 
